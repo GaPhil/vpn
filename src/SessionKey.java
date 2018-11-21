@@ -52,4 +52,13 @@ public class SessionKey {
         return encodeToString(this.secretKey.getEncoded());
     }
 
+    /**
+     * Returns Base64 decoded byte array containing the AES key.
+     *
+     * @param encodeKey Base63 encoded key as string
+     * @return key as decoded byte array
+     */
+    public byte[] decodeKey(String encodeKey) {
+        return Base64.getDecoder().decode(encodeKey);
+    }
 }

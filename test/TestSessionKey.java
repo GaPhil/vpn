@@ -3,7 +3,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Created by GaPhil on 2018-11-20.
  */
-public class TestClass {
+public class TestSessionKey {
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
         int[] keyLengths = {128, 192, 256};

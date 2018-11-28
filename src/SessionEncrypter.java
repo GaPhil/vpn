@@ -3,6 +3,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -25,12 +26,13 @@ public class SessionEncrypter {
      * @param keyLength
      * @throws NoSuchAlgorithmException
      */
-    public SessionEncrypter(Integer keyLength) throws NoSuchAlgorithmException, NoSuchPaddingException {
+    public SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         this.sessionKey = new SessionKey(keyLength);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[cipher.getBlockSize()];
         secureRandom.nextBytes(iv);
         this.ivParameterSpec = new IvParameterSpec(iv);
+        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey());
     }
 
     /**
@@ -50,7 +52,7 @@ public class SessionEncrypter {
      *
      * @return
      */
-    String enccodeKey() {
+    String encodeKey() {
         return sessionKey.encodeKey();
     }
 

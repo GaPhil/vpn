@@ -1,5 +1,8 @@
 import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
+import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -22,12 +25,24 @@ public class SessionEncrypter {
      * @param keyLength
      * @throws NoSuchAlgorithmException
      */
-    public SessionEncrypter(Integer keyLength) throws Exception {
+    public SessionEncrypter(Integer keyLength) throws NoSuchAlgorithmException, NoSuchPaddingException {
         this.sessionKey = new SessionKey(keyLength);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[cipher.getBlockSize()];
         secureRandom.nextBytes(iv);
         this.ivParameterSpec = new IvParameterSpec(iv);
+    }
+
+    /**
+     * The plain text data to be encrypted is sent to the SessionEncrypter via
+     * a CipherOutputStream associated with the SessionEncrypter. The output
+     * from the SessionEncrypter goes to another OutputStream.
+     *
+     * @param outputStream
+     * @return
+     */
+    CipherOutputStream openCipherOutputStream(OutputStream outputStream) {
+        return new CipherOutputStream(outputStream, cipher);
     }
 
     /**

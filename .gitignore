@@ -1,3 +1,7 @@
 .idea
 vpn.iml
 /out
+
+# test files
+cipher
+plainoutput

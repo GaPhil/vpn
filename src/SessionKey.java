@@ -7,6 +7,8 @@ import java.util.Base64;
 
 /**
  * Created by GaPhil on 2018-11-20.
+ * <p>
+ * Creates symmetric (AES) encryption keys. Handles encoding and decoding into Base64
  */
 public class SessionKey {
 
@@ -17,7 +19,7 @@ public class SessionKey {
      *
      * @param keyLength key length in bits
      */
-    public SessionKey(Integer keyLength) throws NoSuchAlgorithmException {
+    SessionKey(Integer keyLength) throws NoSuchAlgorithmException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(keyLength);
         this.secretKey = keyGenerator.generateKey();
@@ -28,7 +30,7 @@ public class SessionKey {
      *
      * @param encodedKey Base64 encoded key
      */
-    public SessionKey(String encodedKey) {
+    SessionKey(String encodedKey) {
         byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
         this.secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
     }

@@ -41,8 +41,8 @@ public class SessionEncrypter {
      * a CipherOutputStream associated with the SessionEncrypter. The output
      * from the SessionEncrypter goes to another OutputStream.
      *
-     * @param outputStream
-     * @return
+     * @param outputStream plain text output stream
+     * @return encrypted output stream
      */
     CipherOutputStream openCipherOutputStream(OutputStream outputStream) {
         return new CipherOutputStream(outputStream, cipher);
@@ -51,7 +51,7 @@ public class SessionEncrypter {
     /**
      * Returns SessionEncrypter's key
      *
-     * @return
+     * @return Base64 encoded key
      */
     String encodeKey() {
         return sessionKey.encodeKey();
@@ -61,7 +61,7 @@ public class SessionEncrypter {
      * Returns SessionEncrypter's initialisation vector (IV)
      * [counter used for AES in CTR more].
      *
-     * @return
+     * @return Base64 encoded initialisation vector (IV)
      */
     String encodeIV() {
         return Base64.getEncoder().encodeToString(ivParameterSpec.getIV());

@@ -1,10 +1,9 @@
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-
-import static com.sun.deploy.util.Base64Wrapper.encodeToString;
 
 /**
  * Created by GaPhil on 2018-11-20.
@@ -49,7 +48,7 @@ public class SessionKey {
      * @return encoded key
      */
     String encodeKey() {
-        return encodeToString(this.secretKey.getEncoded());
+        return Base64.getEncoder().encodeToString(this.secretKey.getEncoded());
     }
 
     /**
@@ -58,7 +57,7 @@ public class SessionKey {
      * @param encodeKey Base64 encoded key as string
      * @return key as decoded byte array
      */
-    public byte[] decodeKey(String encodeKey) {
+    public byte[] decodeKey(String encodeKey) throws IOException {
         return Base64.getDecoder().decode(encodeKey);
     }
 }

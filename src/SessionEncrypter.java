@@ -3,6 +3,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -11,28 +12,28 @@ import java.util.Base64;
 /**
  * Created by GaPhil on 2018-11-28.
  * <p>
- * Performs encryption of a stream of data.
+ * Performs encryption of a stream of data using AES in CTR mode.
  */
 public class SessionEncrypter {
 
-    Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
-    SessionKey sessionKey;
-    IvParameterSpec ivParameterSpec;
+    private Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+    private SessionKey sessionKey;
+    private IvParameterSpec ivParameterSpec;
 
     /**
-     * Creates parameters needed for AES in CTR mode; namely key and
-     * counter referred to as initialisation vector (IV).
+     * Creates parameters needed for AES in CTR mode; namely key and counter
+     * referred to as initialisation vector (IV) and initialises cipher used
+     * for encryption.
      *
-     * @param keyLength
-     * @throws NoSuchAlgorithmException
+     * @param keyLength key length in bits
      */
-    public SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
         this.sessionKey = new SessionKey(keyLength);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[cipher.getBlockSize()];
         secureRandom.nextBytes(iv);
         this.ivParameterSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey());
+        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
     /**

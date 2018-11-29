@@ -1,4 +1,7 @@
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import javax.crypto.*;
 
 /**
@@ -23,7 +26,6 @@ public class TestSessionCrypto {
         ) {
 
             // Copy data byte by byte from plain input to crypto output via encrypter
-
             while ((b = plainin.read()) != -1) {
                 cryptoout.write(b);
             }
@@ -46,6 +48,13 @@ public class TestSessionCrypto {
         }
 
         System.out.format("Encryption and decryption done. Check that \"%s\" and \"%s\" are identical!\n", PLAININPUT, PLAINOUTPUT);
+
+        byte[] plainIput = Files.readAllBytes(Paths.get(PLAININPUT));
+        byte[] plainOutput = Files.readAllBytes(Paths.get(PLAINOUTPUT));
+        if (Arrays.equals(plainIput, plainOutput)) {
+            System.out.println("\n\"" + PLAININPUT + "\" and \"" + PLAINOUTPUT + "\" are the same - Test Succeeded!");
+        } else {
+            System.out.println("\n\"" + PLAININPUT + "\" and \"" + PLAINOUTPUT + "\" are NOT the same - Test Failed!");
+        }
     }
 }
-

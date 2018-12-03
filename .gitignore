@@ -8,3 +8,5 @@ plainoutput
 
 # cert and key files
 *.pem
+*.srl
+*.csr

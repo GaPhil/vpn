@@ -12,34 +12,36 @@ public class VerifyCertificate {
         verifyCertificate(args[0], args[1]);
     }
 
-    static void verifyCertificate(String caFile, String userFile) throws Exception {
+    public static void verifyCertificate(String caFile, String userFile) throws Exception {
         X509Certificate caCertificate = null;
         X509Certificate userCertificate = null;
         try {
             caCertificate = readCertificate(caFile);
             userCertificate = readCertificate(userFile);
         } catch (Exception exception) {
-            System.out.println("Certificate reading failed.");
+            System.out.println("Fail: Certificate could not be read.");
         }
         try {
             System.out.println("DN for CA: " + caCertificate.getSubjectDN());
             System.out.println("DN for user: " + userCertificate.getSubjectDN());
         } catch (Exception exception) {
-            System.out.println("DN could not be read.");
+            System.out.println("Fail: DN could not be read.");
         }
         try {
             caCertificate.verify(caCertificate.getPublicKey());
             userCertificate.verify(caCertificate.getPublicKey());
+            System.out.println("Pass: Certificate verified.");
         } catch (Exception exception) {
-            System.out.println("Certificate verification failed.");
+            System.out.println("Fail: Certificate verification failed.");
         }
         try {
             caCertificate.checkValidity();
             userCertificate.checkValidity();
+            System.out.println("Pass: Certificate valid.");
         } catch (Exception exception) {
-            System.out.println("Certificate not valid.");
+            System.out.println("Fail: Certificate not valid.");
+
         }
-        System.out.println("Pass");
     }
 
 

@@ -5,3 +5,6 @@ vpn.iml
 # test files
 cipher
 plainoutput
+
+# cert and key files
+*.pem

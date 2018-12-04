@@ -6,6 +6,8 @@ import java.security.cert.X509Certificate;
 
 /**
  * Created by GaPhil on 2018-12-03.
+ * <p>
+ * Performs certificate verification on CA certificate as well as user certificate.
  */
 public class VerifyCertificate {
 

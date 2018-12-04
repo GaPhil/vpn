@@ -3,30 +3,27 @@ import java.security.PublicKey;
 
 /**
  * Created by GaPhil on 2018-12-04.
+ * <p>
+ * Test the Handshake Crypto; extract key pair, encrypt, decrypt, compare.
  */
 public class TestHandshakeCrypto {
-    static String PRIVATEKEYFILE = "private_key_user.pem";
-    static String CERTFILE = "cert_user.pem";
-    static String PLAINTEXT = "Time flies like an arrow. Fruit flies like a banana.";
-    static String ENCODING = "UTF-8"; /* For converting between strings and byte arrays */
+    private static String PRIVATEKEYFILE = "private_key_user.pem";
+    private static String CERTFILE = "cert_user.pem";
+    private static String PLAINTEXT = "Time flies like an arrow. Fruit flies like a banana.";
+    private static String ENCODING = "UTF-8";
 
     static public void main(String[] args) throws Exception {
-        /* Extract key pair */
         PublicKey publickey = HandshakeCrypto.getPublicKeyFromCertFile(CERTFILE);
         PrivateKey privatekey = HandshakeCrypto.getPrivateKeyFromKeyFile(PRIVATEKEYFILE);
 
-        /* Encode string as bytes */
-        byte[] plaininputbytes = PLAINTEXT.getBytes(ENCODING);
-        /* Encrypt it */
-        byte[] cipher = HandshakeCrypto.encrypt(plaininputbytes, publickey);
-        /* Then decrypt back */
-        byte[] plainoutputbytes = HandshakeCrypto.decrypt(cipher, privatekey);
-        /* Decode bytes into string */
-        String plainoutput = new String(plainoutputbytes, ENCODING);
-        if (plainoutput.equals(PLAINTEXT)) {
+        byte[] plainInputBytes = PLAINTEXT.getBytes(ENCODING);
+        byte[] cipher = HandshakeCrypto.encrypt(plainInputBytes, publickey);
+        byte[] plainOutputBytes = HandshakeCrypto.decrypt(cipher, privatekey);
+        String plainOutput = new String(plainOutputBytes, ENCODING);
+        if (plainOutput.equals(PLAINTEXT)) {
             System.out.println("Pass. Input and output strings are the same: \"" + PLAINTEXT + "\"");
         } else {
-            System.out.println("Fail. Expected \"" + PLAINTEXT + "\", but got \"" + plainoutput + "\'");
+            System.out.println("Fail. Expected \"" + PLAINTEXT + "\", but got \"" + plainOutput + "\'");
         }
     }
 }

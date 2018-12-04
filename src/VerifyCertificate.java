@@ -1,5 +1,6 @@
 import java.io.FileInputStream;
-import java.security.PublicKey;
+import java.io.FileNotFoundException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
@@ -8,11 +9,25 @@ import java.security.cert.X509Certificate;
  */
 public class VerifyCertificate {
 
-    public static void main(String[] args) throws Exception{
+    /**
+     * Main method for running Certificate verification from command line:
+     * $ java VerifyCertificate <CA-file> <user-file>
+     *
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
         verifyCertificate(args[0], args[1]);
     }
 
-    public static void verifyCertificate(String caFile, String userFile) throws Exception {
+
+    /**
+     * Verifies certificates of CA and user; readability, DN,
+     * verify signature of certificate, check validity
+     *
+     * @param caFile   certificate authority certificate file
+     * @param userFile user certificate file
+     */
+    static void verifyCertificate(String caFile, String userFile) {
         X509Certificate caCertificate = null;
         X509Certificate userCertificate = null;
         try {
@@ -40,16 +55,18 @@ public class VerifyCertificate {
             System.out.println("Pass: Certificate valid.");
         } catch (Exception exception) {
             System.out.println("Fail: Certificate not valid.");
-
         }
     }
 
-
-    static X509Certificate readCertificate(String certificateName) throws Exception {
+    /**
+     * Reads X.509 certificate from file and returns java X509Certificate object
+     *
+     * @param certificateName name of certificate
+     * @return X.509 certificate object
+     */
+    static X509Certificate readCertificate(String certificateName) throws CertificateException, FileNotFoundException {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         FileInputStream fileInputStream = new FileInputStream(certificateName);
-        X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(fileInputStream);
-        PublicKey publicKey = certificate.getPublicKey();
-        return certificate;
+        return (X509Certificate) certificateFactory.generateCertificate(fileInputStream);
     }
 }

@@ -20,22 +20,49 @@ import static javax.crypto.Cipher.ENCRYPT_MODE;
  */
 public class HandshakeCrypto {
 
+    /**
+     * RSA encrypts plain text and returns cipher text.
+     *
+     * @param plainText plain text as byte array
+     * @param key       RSA key (private or public)
+     * @return cipher text as byte array
+     */
     static byte[] encrypt(byte[] plainText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(ENCRYPT_MODE, key);
         return cipher.doFinal(plainText);
     }
 
+    /**
+     * RSA decrypts cipher text and returns plain text.
+     *
+     * @param cipherText cipher text as byte array
+     * @param key        RSA key (private or public)
+     * @return plain text as byte array
+     */
     static byte[] decrypt(byte[] cipherText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(DECRYPT_MODE, key);
         return cipher.doFinal(cipherText);
     }
 
+    /**
+     * Returns RSA public key from X.509 certificate
+     *
+     * @param certFile X.509 certificate in PEM file
+     * @return RSA public key
+     */
     static PublicKey getPublicKeyFromCertFile(String certFile) throws Exception {
         return VerifyCertificate.readCertificate(certFile).getPublicKey();
     }
 
+    /**
+     * Returns RSA private key from private key file in PEM format.
+     * First converts key file to der format and then reads in PKCS8.
+     *
+     * @param keyFile private RSA key file in PEM format
+     * @return RSA private key
+     */
     static PrivateKey getPrivateKeyFromKeyFile(String keyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         String file = keyFile.substring(0, keyFile.lastIndexOf("."));
         String outFile = file + ".der";

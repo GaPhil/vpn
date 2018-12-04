@@ -1,5 +1,5 @@
 #!/bin/bash
-# use with $ sh create_user "Bob Smith bob@smith.com"
+# use with $ sh create_ca "Bob Smith bob@smith.com"
 
 name_and_mail=$1
 

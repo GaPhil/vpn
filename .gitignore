@@ -10,3 +10,4 @@ plainoutput
 *.pem
 *.srl
 *.csr
+*.der

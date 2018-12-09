@@ -1,4 +1,5 @@
 #!/bin/bash
+# creates CA, server and client certificates
 # use with $ sh create_certs "Bob Smith bob@smith.com"
 
 name_and_mail=$1

@@ -4,13 +4,10 @@ Virtual private network using AES session key, performing secure handshake with 
 
 ## Getting started
 
-Clone:
+Installation:
 
-* clone with SSH: `$ git lcone git@github.com:GaPhil/vpn.git`
-or 
-* clone with HTTPS: `$ git clone https://github.com/GaPhil/vpn.git`
-
-`$ cd vpn`
+* clone with SSH: `$ git lcone git@github.com:GaPhil/vpn.git`<br>(or clone with HTTPS: `$ git clone https://github.com/GaPhil/vpn.git`)
+* `$ cd vpn`
 
 In order for the handshake to work, three certificates are needed; one for the CA as well as one for the server and client (`cert_ca.pem`, `cert_server.pem` and `cert_client.pem`):
 * create three certificates: `$ sh create_certs.sh "<name> <email>"`

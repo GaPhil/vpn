@@ -4,9 +4,10 @@ Virtual private network using AES session key, performing secure handshake with 
 
 ## Getting started
 
-In order for the handshake to work, two certificates will be needed; one for the CA and one for the user (cert_ca.pem and cert_user.pem):
+In order for the handshake to work, three certificates will be needed; one for the CA as well as one for the server and client (cert_ca.pem, cert_server.pem and cert_client.pem):
 * create CA certificate: `$ sh create_ca.sh "<name> <email>"`
-* create user certificate: `$ sh create_user.sh "<name> <email>"`
+* create server and client certificate: `$ sh create_user.sh "<name> <email>"`
 * verify certificates: 
   * compile: `$ javac src/verifyCertificate.java` 
-  * run: `$ java src/verifyCertificate cert_ca.pem cert_user.pem`
+  * run: `$ java src/verifyCertificate cert_ca.pem cert_server.pem`
+  * run: `$ java src/verifyCertificate cert_ca.pem cert_client.pem`

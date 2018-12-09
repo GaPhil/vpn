@@ -6,23 +6,43 @@ name_and_mail=$1
 subj="/C=SE\
 /ST=Stockholm\
 /OU=KTH Royal Institute of Technology\
-/CN=$name_and_mail User"
+/CN=$name_and_mail"
 
-# create user certificate signing request (CSR) with RSA key
+# create server certificate signing request (CSR) with RSA key
 openssl req \
    -days 60 \
    -new \
    -newkey rsa:2048 \
    -nodes \
-   -subj "$subj" \
-   -keyout private_key_user.pem \
-   -out cert_user.csr
+   -subj "$subj Server" \
+   -keyout private_key_server.pem \
+   -out cert_server.csr
 
-# sign CSR with CA key and certificate
+# create client certificate signing request (CSR) with RSA key
+openssl req \
+   -days 60 \
+   -new \
+   -newkey rsa:2048 \
+   -nodes \
+   -subj "$subj Client" \
+   -keyout private_key_client.pem \
+   -out cert_client.csr
+
+
+# sign server CSR with CA key and certificate
 openssl x509 \
    -req \
-   -in cert_user.csr \
+   -in cert_server.csr \
    -CA cert_ca.pem \
    -CAkey private_key_ca.pem \
    -CAcreateserial \
-   -out cert_user.pem
+   -out cert_server.pem
+
+# sign client CSR with CA key and certificate
+openssl x509 \
+   -req \
+   -in cert_client.csr \
+   -CA cert_ca.pem \
+   -CAkey private_key_ca.pem \
+   -CAcreateserial \
+   -out cert_client.pem

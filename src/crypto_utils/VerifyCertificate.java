@@ -25,7 +25,7 @@ public class VerifyCertificate {
     public static void main(String[] args) {
         verifyCertificate(args[0], args[1]);
     }
-    
+
     /**
      * Verifies certificates of CA and user; readability, DN,
      * verify signature of certificate, check validity
@@ -92,11 +92,8 @@ public class VerifyCertificate {
     }
 
     public static X509Certificate createCertificate(String stringCertificate) throws CertificateException {
-
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-
         byte[] bytes = Base64.getDecoder().decode(stringCertificate);
-
         InputStream in = new ByteArrayInputStream(bytes);
         return (X509Certificate) certFactory.generateCertificate(in);
     }

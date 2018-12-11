@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /**
- * Adapted by GaPhil on 2018-12-09 based on psj .
+ * Adapted by GaPhil on 2018-12-09 based on psj (2018).
  * <p>
  * Handshake message encoding/decoding and transmission. A Handshake message is
  * represented as a set of parameters <key, value> pair.
@@ -27,7 +27,7 @@ public class HandshakeMessage extends Properties {
     }
 
     /**
-     * Assign a parameter and value.
+     * Assigns a parameter and value.
      *
      * @param param parameter as string
      * @param value value as string
@@ -36,15 +36,15 @@ public class HandshakeMessage extends Properties {
         this.put(param, value);
     }
 
-    /*
-     * Send a handshake message out on a socket
-     *
-     * Use the built-in encoding of Properties as XML:
-     *   - Encode the message in XML
-     *   - Convert XML to a byte array, and write the byte array to the socket
-     *
+    /**
+     * Sends a handshake message out on a socket. Uses the built-in encoding of
+     * Properties as XML:
+     * - Encode the message in XML
+     * - Convert XML to a byte array, and write the byte array to the socket
      * Prepend the byte array with an integer string with the length of the string.
      * The integer string is terminated by a whitespace.
+     *
+     * @param socket socket to send message on
      */
     public void send(Socket socket) throws IOException {
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
@@ -57,14 +57,15 @@ public class HandshakeMessage extends Properties {
         socket.getOutputStream().flush();
     }
 
-    /*
-     * Receive a handshake message on a socket
+    /**
+     * Receives a handshake message on a socket.
+     * Reads a string with an integer followed by whitespace, which gives the
+     * size of the message in bytes. Then reads the XML data and converts it to
+     * a HandshakeMessage.
      *
-     * First read a string with an integer followed by whitespace,
-     * which gives the size of the message in bytes. Then read the XML data
-     * and convert it to a crypto_utils.HandshakeMessage.
+     * @param socket socket to receive message on
      */
-    public void recv(Socket socket) throws IOException {
+    public void receive(Socket socket) throws IOException {
         int length = 0;
         for (int n = socket.getInputStream().read(); !Character.isWhitespace(n); n = socket.getInputStream().read()) {
             length = length * 10 + Character.getNumericValue(n);

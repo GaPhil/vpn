@@ -1,10 +1,13 @@
 package crypto_utils;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 /**
  * Created by GaPhil on 2018-12-03.
@@ -23,6 +26,10 @@ public class VerifyCertificate {
         verifyCertificate(args[0], args[1]);
     }
 
+    public VerifyCertificate() {
+
+    }
+
 
     /**
      * Verifies certificates of CA and user; readability, DN,
@@ -32,11 +39,26 @@ public class VerifyCertificate {
      * @param userFile user certificate file
      */
     public static void verifyCertificate(String caFile, String userFile) {
-        X509Certificate caCertificate = null;
         X509Certificate userCertificate = null;
         try {
-            caCertificate = readCertificate(caFile);
             userCertificate = readCertificate(userFile);
+        } catch (Exception exception) {
+            System.out.println("Fail: Certificate could not be read.");
+        }
+        verifyCertificate(caFile, userCertificate);
+    }
+
+    /**
+     * Verifies certificates of CA and user; readability, DN,
+     * verify signature of certificate, check validity
+     *
+     * @param caFile          certificate authority certificate file
+     * @param userCertificate user certificate
+     */
+    public static void verifyCertificate(String caFile, X509Certificate userCertificate) {
+        X509Certificate caCertificate = null;
+        try {
+            caCertificate = readCertificate(caFile);
         } catch (Exception exception) {
             System.out.println("Fail: Certificate could not be read.");
         }
@@ -72,5 +94,19 @@ public class VerifyCertificate {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         FileInputStream fileInputStream = new FileInputStream(certificateName);
         return (X509Certificate) certificateFactory.generateCertificate(fileInputStream);
+    }
+
+    public static X509Certificate createCertificate(String stringCertificate) throws CertificateException {
+
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+
+        byte[] bytes = Base64.getDecoder().decode(stringCertificate);
+
+        InputStream in = new ByteArrayInputStream(bytes);
+        return (X509Certificate) certFactory.generateCertificate(in);
+    }
+
+    public static String certificateToString(X509Certificate certificate) throws CertificateException {
+        return Base64.getEncoder().encodeToString(certificate.getEncoded());
     }
 }

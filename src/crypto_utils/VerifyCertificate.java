@@ -68,7 +68,7 @@ public class VerifyCertificate {
      * @param certificateName name of certificate
      * @return X.509 certificate object
      */
-    static X509Certificate readCertificate(String certificateName) throws CertificateException, FileNotFoundException {
+    public static X509Certificate readCertificate(String certificateName) throws CertificateException, FileNotFoundException {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         FileInputStream fileInputStream = new FileInputStream(certificateName);
         return (X509Certificate) certificateFactory.generateCertificate(fileInputStream);

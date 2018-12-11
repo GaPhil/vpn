@@ -25,12 +25,7 @@ public class VerifyCertificate {
     public static void main(String[] args) {
         verifyCertificate(args[0], args[1]);
     }
-
-    public VerifyCertificate() {
-
-    }
-
-
+    
     /**
      * Verifies certificates of CA and user; readability, DN,
      * verify signature of certificate, check validity

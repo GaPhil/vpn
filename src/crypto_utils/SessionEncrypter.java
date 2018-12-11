@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
@@ -27,7 +29,7 @@ public class SessionEncrypter {
      *
      * @param keyLength key length in bits
      */
-    SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+    public SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
         this.sessionKey = new SessionKey(keyLength);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[cipher.getBlockSize()];
@@ -37,33 +39,33 @@ public class SessionEncrypter {
     }
 
     /**
-     * The plain text data to be encrypted is sent to the SessionEncrypter via
-     * a CipherOutputStream associated with the SessionEncrypter. The output
-     * from the SessionEncrypter goes to another OutputStream.
+     * The plain text data to be encrypted is sent to the crypto_utils.SessionEncrypter via
+     * a CipherOutputStream associated with the crypto_utils.SessionEncrypter. The output
+     * from the crypto_utils.SessionEncrypter goes to another OutputStream.
      *
      * @param outputStream plain text output stream
      * @return encrypted output stream
      */
-    CipherOutputStream openCipherOutputStream(OutputStream outputStream) {
+    public CipherOutputStream openCipherOutputStream(OutputStream outputStream) {
         return new CipherOutputStream(outputStream, cipher);
     }
 
     /**
-     * Returns SessionEncrypter's key
+     * Returns crypto_utils.SessionEncrypter's key
      *
      * @return Base64 encoded key
      */
-    String encodeKey() {
+    public String encodeKey() {
         return sessionKey.encodeKey();
     }
 
     /**
-     * Returns SessionEncrypter's initialisation vector (IV)
+     * Returns crypto_utils.SessionEncrypter's initialisation vector (IV)
      * [counter used for AES in CTR more].
      *
      * @return Base64 encoded initialisation vector (IV)
      */
-    String encodeIV() {
+    public String encodeIV() {
         return Base64.getEncoder().encodeToString(ivParameterSpec.getIV());
     }
 }

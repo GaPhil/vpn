@@ -1,10 +1,12 @@
+import crypto_utils.HandshakeCrypto;
+
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
  * Created by GaPhil on 2018-12-04.
  * <p>
- * Test the Handshake Crypto; extract key pair, encrypt, decrypt, compare.
+ * Test the crypto_utils.Handshake Crypto; extract key pair, encrypt, decrypt, compare.
  */
 public class TestHandshakeCrypto {
     private static String PRIVATEKEYFILE = "private_key_user.pem";

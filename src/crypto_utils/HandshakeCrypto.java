@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -27,7 +29,7 @@ public class HandshakeCrypto {
      * @param key       RSA key (private or public)
      * @return cipher text as byte array
      */
-    static byte[] encrypt(byte[] plainText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static byte[] encrypt(byte[] plainText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(ENCRYPT_MODE, key);
         return cipher.doFinal(plainText);
@@ -40,7 +42,7 @@ public class HandshakeCrypto {
      * @param key        RSA key (private or public)
      * @return plain text as byte array
      */
-    static byte[] decrypt(byte[] cipherText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static byte[] decrypt(byte[] cipherText, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(DECRYPT_MODE, key);
         return cipher.doFinal(cipherText);
@@ -52,7 +54,7 @@ public class HandshakeCrypto {
      * @param certFile X.509 certificate in PEM file
      * @return RSA public key
      */
-    static PublicKey getPublicKeyFromCertFile(String certFile) throws Exception {
+    public static PublicKey getPublicKeyFromCertFile(String certFile) throws Exception {
         return VerifyCertificate.readCertificate(certFile).getPublicKey();
     }
 
@@ -63,7 +65,7 @@ public class HandshakeCrypto {
      * @param keyFile private RSA key file in PEM format
      * @return RSA private key
      */
-    static PrivateKey getPrivateKeyFromKeyFile(String keyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PrivateKey getPrivateKeyFromKeyFile(String keyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         String file = keyFile.substring(0, keyFile.lastIndexOf("."));
         String outFile = file + ".der";
         try {

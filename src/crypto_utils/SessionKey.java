@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -15,32 +17,32 @@ public class SessionKey {
     private SecretKey secretKey;
 
     /**
-     * Creates random SessionKey object of specified length.
+     * Creates random crypto_utils.SessionKey object of specified length.
      *
      * @param keyLength key length in bits
      */
-    SessionKey(Integer keyLength) throws NoSuchAlgorithmException {
+    public SessionKey(Integer keyLength) throws NoSuchAlgorithmException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(keyLength);
         this.secretKey = keyGenerator.generateKey();
     }
 
     /**
-     * Creates SessionKey object from a string containing an existing key in Base64 encoding.
+     * Creates crypto_utils.SessionKey object from a string containing an existing key in Base64 encoding.
      *
      * @param encodedKey Base64 encoded key
      */
-    SessionKey(String encodedKey) {
+    public SessionKey(String encodedKey) {
         byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
         this.secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
     }
 
     /**
-     * Returns SecretKey from SessionKey object
+     * Returns SecretKey from crypto_utils.SessionKey object
      *
      * @return secret key
      */
-    SecretKey getSecretKey() {
+    public SecretKey getSecretKey() {
         return this.secretKey;
     }
 
@@ -49,7 +51,7 @@ public class SessionKey {
      *
      * @return encoded key
      */
-    String encodeKey() {
+    public String encodeKey() {
         return Base64.getEncoder().encodeToString(this.secretKey.getEncoded());
     }
 

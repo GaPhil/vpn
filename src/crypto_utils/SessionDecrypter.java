@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.NoSuchPaddingException;
@@ -27,26 +29,26 @@ public class SessionDecrypter {
      * @param key Session key in the form of a Baes64 encoded string
      * @param iv  Initialisation vector in the form of a Base64 encoded string
      */
-    SessionDecrypter(String key, String iv) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+    public SessionDecrypter(String key, String iv) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
         this.sessionKey = new SessionKey(key);
         this.ivParameterSpec = new IvParameterSpec(Base64.getDecoder().decode(iv));
         this.cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
     /**
-     * The cipher text data to be decrypted is sent to the SessionDecrypter via
-     * an InputStream associated with the SessionDecrypter. The output
-     * from the SessionDecrypter goes to a CipherInputStream.
+     * The cipher text data to be decrypted is sent to the crypto_utils.SessionDecrypter via
+     * an InputStream associated with the crypto_utils.SessionDecrypter. The output
+     * from the crypto_utils.SessionDecrypter goes to a CipherInputStream.
      *
      * @param inputStream encrypted input stream
      * @return plain text input stream
      */
-    CipherInputStream openCipherInputStream(InputStream inputStream) {
+    public CipherInputStream openCipherInputStream(InputStream inputStream) {
         return new CipherInputStream(inputStream, cipher);
     }
 
     /**
-     * Returns SessionDecrypter's key
+     * Returns crypto_utils.SessionDecrypter's key
      *
      * @return Base64 encoded key
      */
@@ -55,7 +57,7 @@ public class SessionDecrypter {
     }
 
     /**
-     * Returns SessionDecrypter's initialisation vector (IV)
+     * Returns crypto_utils.SessionDecrypter's initialisation vector (IV)
      * [counter used for AES in CTR more].
      *
      * @return Base64 encoded initialisation vector (IV)

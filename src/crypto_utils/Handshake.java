@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import javafx.util.Pair;
 
 import java.security.cert.X509Certificate;
@@ -39,8 +41,16 @@ public class Handshake {
     }
 
 
-    public void serverHelloMessage(String serverCertificate) {
+    public void serverHelloMessage(String serverCertificate) throws Exception {
+        Pair<String, String> message1 = new Pair<>("MessageType", "ServerHello");
+        X509Certificate certificate = VerifyCertificate.readCertificate(serverCertificate);
+        Pair<String, String> message2 = new Pair<>("Certiifcate", certificate.toString());
+    }
 
+    public void forwardMessage(String targetHost, String targetPort) {
+        Pair<String, String> message1 = new Pair<>("MessageType", "Forward");
+        Pair<String, String> message2 = new Pair<>("TargetHost", targetHost);
+        Pair<String, String> message3 = new Pair<>("TargetPort", targetPort);
     }
 
 
@@ -54,8 +64,8 @@ public class Handshake {
 //    public static int targetPort = 6789;
 
 
-    static final String serverHost = "portfw.kth.se";
-    static final int serverPort = 4412;
-    static final String targetHost = "server.kth.se";
-    static int targetPort = 6789;
+    public static final String serverHost = "portfw.kth.se";
+    public static final int serverPort = 4412;
+    public static final String targetHost = "server.kth.se";
+    public static int targetPort = 6789;
 }

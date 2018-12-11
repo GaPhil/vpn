@@ -1,3 +1,5 @@
+package crypto_utils;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.security.cert.CertificateException;
@@ -13,7 +15,7 @@ public class VerifyCertificate {
 
     /**
      * Main method for running Certificate verification from command line:
-     * $ java VerifyCertificate <CA-file> <user-file>
+     * $ java crypto_utils.VerifyCertificate <CA-file> <user-file>
      *
      * @param args command line arguments
      */
@@ -29,7 +31,7 @@ public class VerifyCertificate {
      * @param caFile   certificate authority certificate file
      * @param userFile user certificate file
      */
-    static void verifyCertificate(String caFile, String userFile) {
+    public static void verifyCertificate(String caFile, String userFile) {
         X509Certificate caCertificate = null;
         X509Certificate userCertificate = null;
         try {

@@ -1,6 +1,4 @@
-import crypto_utils.Handshake;
-import crypto_utils.HandshakeMessage;
-import crypto_utils.VerifyCertificate;
+import crypto_utils.*;
 import utils.Arguments;
 import utils.Logger;
 
@@ -47,6 +45,8 @@ public class ForwardServer {
 
         Socket clientSocket = handshakeSocket.accept();
         String clientHostPort = clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
+        X509Certificate clientCertificate = null;
+
         Logger.log("Incoming handshake connection from " + clientHostPort);
 
         /* This is where the handshake should take place */
@@ -59,8 +59,8 @@ public class ForwardServer {
             receiveClientHello.getParameter("MessageType");
             receiveClientHello.receive(clientSocket);
             String cert = receiveClientHello.getParameter("Certificate");
-            X509Certificate certificate = VerifyCertificate.createCertificate(cert);
-            verifyCertificate("ca.pem", certificate);
+            clientCertificate = VerifyCertificate.createCertificate(cert);
+            verifyCertificate("ca.pem", clientCertificate);
             Logger.log("Client certificate verification successful from " + clientHostPort);
         } catch (Exception exception) {
             System.out.println("Client certificate verification failed!");
@@ -69,14 +69,21 @@ public class ForwardServer {
             HandshakeMessage serverHello = new HandshakeMessage();
             serverHello.putParameter("MessageType", "ServerHello");
             serverHello.send(clientSocket);
-            X509Certificate certificate = VerifyCertificate.readCertificate("server.pem");
-            serverHello.putParameter("Certificate", certificateToString(certificate));
+            X509Certificate serverCertificate = VerifyCertificate.readCertificate("server.pem");
+            serverHello.putParameter("Certificate", certificateToString(serverCertificate));
             serverHello.send(clientSocket);
             Logger.log("ServerHello message sent to " + clientHostPort);
         } catch (Exception exception) {
             System.out.println("ServerHello message sending failed!");
             exception.printStackTrace();
         }
+
+
+        // if the server agrees to do port forwarding to the destination, it
+        // will set up the session. For this the server needs to generate
+        // session key and IV. Server creates a socket end point, and returns
+        // the corresponding TCP port number.
+
         try {
             HandshakeMessage receiveForward = new HandshakeMessage();
             receiveForward.receive(clientSocket);
@@ -88,6 +95,32 @@ public class ForwardServer {
             Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
         } catch (Exception exception) {
             System.out.println("Forward message handling failed!");
+            exception.printStackTrace();
+        }
+        try {
+            HandshakeMessage session = new HandshakeMessage();
+            session.putParameter("MessageType", "Session");
+            session.send(clientSocket);
+            SessionEncrypter sessionEncrypter = new SessionEncrypter(128);
+            HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
+            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeKey(), clientCertificate.getPublicKey());
+            String sessionKey = new String(encryptedSessionKey);
+            session.putParameter("SessionKey", sessionKey);
+            session.send(clientSocket);
+            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIV(), clientCertificate.getPublicKey());
+            String sessionIv = new String(encryptedSessionIv);
+            session.putParameter("SessionIV", sessionIv);
+            session.send(clientSocket);
+
+            listenSocket = new ServerSocket();
+            listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
+
+            session.putParameter("ServerHost", listenSocket.getInetAddress().toString());
+            session.send(clientSocket);
+
+            session.putParameter("ServerPort", Integer.toString(listenSocket.getLocalPort()));
+        } catch (Exception exception) {
+            System.out.println("Session message sending failed!");
             exception.printStackTrace();
         }
 
@@ -104,8 +137,8 @@ public class ForwardServer {
          * Here, we use a static address instead (serverHost/serverPort).
          * (This may give "Address already in use" errors, but that's OK for now.)
          */
-        listenSocket = new ServerSocket();
-        listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
+//        listenSocket = new ServerSocket();
+//        listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
 
         /* The final destination. The ForwardServer sets up port forwarding
          * between the listensocket (ie., ServerHost/ServerPort) and the target.

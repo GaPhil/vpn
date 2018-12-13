@@ -16,13 +16,17 @@ In order for the handshake to work, three certificates are needed; one for the C
   
 Start the server:
 * compile: `$ javac $(find ./src/* | grep .java)`
-* run: `$ java ForwardServer --handshakeport=2206 --usercert=server.pem --cacert=ca.pem --key=server-private.der`
+* run: 
+```bash
+$ java ForwardServer --handshakeport=2206 --usercert=server.pem \
+   --cacert=ca.pem --key=server-private.der
+```
 
 Start the client:
 * compile: `$ javac $(find ./src/* | grep .java)`
 * run: 
 ```bash
 $ java ForwardClient --handshakehost=portfw.kth.se  --handshakeport=2206 \
---targethost=server.kth.se --targetport=6789 \
---usercert=client.pem --cacert=ca.pem --key=client-private.der
+   --targethost=server.kth.se --targetport=6789 \
+   --usercert=client.pem --cacert=ca.pem --key=client-private.der
 ```

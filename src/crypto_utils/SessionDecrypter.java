@@ -62,7 +62,7 @@ public class SessionDecrypter {
      *
      * @return Base64 encoded initialisation vector (IV)
      */
-    String encodeIV() {
+    String encodeIv() {
         return Base64.getEncoder().encodeToString(ivParameterSpec.getIV());
     }
 }

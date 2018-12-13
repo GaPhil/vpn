@@ -55,8 +55,17 @@ public class SessionEncrypter {
      *
      * @return Base64 encoded key
      */
-    public String encodeKey() {
+    public String encodeStringKey() {
         return sessionKey.encodeKey();
+    }
+
+    /**
+     * Returns crypto_utils.SessionEncrypter's key
+     *
+     * @return Base64 encoded key
+     */
+    public byte [] encodeKey() {
+        return sessionKey.encodeKey().getBytes();
     }
 
     /**
@@ -65,7 +74,17 @@ public class SessionEncrypter {
      *
      * @return Base64 encoded initialisation vector (IV)
      */
-    public String encodeIV() {
+    public String encodeStringIv() {
         return Base64.getEncoder().encodeToString(ivParameterSpec.getIV());
+    }
+
+    /**
+     * Returns crypto_utils.SessionEncrypter's initialisation vector (IV)
+     * [counter used for AES in CTR more].
+     *
+     * @return Base64 encoded initialisation vector (IV)
+     */
+    public byte[] encodeIv() {
+        return Base64.getEncoder().encodeToString(ivParameterSpec.getIV()).getBytes();
     }
 }

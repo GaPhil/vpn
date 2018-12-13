@@ -20,6 +20,6 @@ Start the server:
 
 Start the client:
 * compile: `$ javac $(find ./src/* | grep .java)`
-* run: `$java ForwardClient --handshakehost=portfw.kth.se  --handshakeport=2206 \`<br>
-`--targethost=server.kth.se --targetport=6789 \`<br>
-`--usercert=client.pem --cacert=ca.pem --key=client-private.der`
+* run: ```$java ForwardClient --handshakehost=portfw.kth.se  --handshakeport=2206 \
+--targethost=server.kth.se --targetport=6789 \
+--usercert=client.pem --cacert=ca.pem --key=client-private.der```

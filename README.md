@@ -11,5 +11,15 @@ In order for the handshake to work, three certificates are needed; one for the C
 * create three certificates: `$ sh create_certs.sh "<name> <email>"`
 * verify certificates: 
   * compile: `$ javac src/verifyCertificate.java` 
-  * run: `$ java src/verifyCertificate cert_ca.pem cert_server.pem`
-  * run: `$ java src/verifyCertificate cert_ca.pem cert_client.pem`
+  * run: `$ java src/crypto_utils/verifyCertificate ca.pem server.pem`
+  * run: `$ java src/crypto_utils/verifyCertificate ca.pem client.pem`
+  
+Start the server:
+* compile: `$ javac $(find ./src/* | grep .java)`
+* run: `$ java ForwardServer --handshakeport=2206 --usercert=server.pem --cacert=ca.pem --key=server-private.der`
+
+Start the client:
+* compile: `$ javac $(find ./src/* | grep .java)`
+* run: `$java ForwardClient --handshakehost=portfw.kth.se  --handshakeport=2206 \`<br>
+`--targethost=server.kth.se --targetport=6789 \`<br>
+`--usercert=client.pem --cacert=ca.pem --key=client-private.der`

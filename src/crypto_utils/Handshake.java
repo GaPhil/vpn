@@ -1,8 +1,17 @@
 package crypto_utils;
 
-import javafx.util.Pair;
 
+import utils.Logger;
+
+import java.net.Socket;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Base64;
+
+import static crypto_utils.VerifyCertificate.certificateToString;
+import static crypto_utils.VerifyCertificate.verifyCertificate;
 
 /**
  * Created by GaPhil on 2018-12-09.
@@ -11,51 +20,7 @@ public class Handshake {
     /* Static data -- replace with handshake! */
 
 
-    /**
-     * client and server authenticate each other
-     * * certificate exchange
-     * <p>
-     * client requests forwarding to a target server
-     * <p>
-     * server creates secret key for enc
-     * * client and server
-     * <p>
-     * authenticate client and server to each other
-     * * certificate based authentication
-     * <p>
-     * create session key (symmetric key)
-     * <p>
-     * set up an encrypted connection from client to server forwarder using symmetric key encryption
-     */
-    public Handshake() {
-        VerifyCertificate.verifyCertificate("cert_ca.pem", "cert_server.pem");
-        VerifyCertificate.verifyCertificate("cert_ca.pem", "cert_client.pem");
-    }
-
-
-    public void clientHelloMessage(String clientCertificate) throws Exception {
-        Pair<String, String> message1 = new Pair<>("MessageType", "ClientHello");
-        //Client's X.509 certificate encoded as a string
-        X509Certificate certificate = VerifyCertificate.readCertificate(clientCertificate);
-        Pair<String, String> message2 = new Pair<>("Certificate", certificate.toString());
-    }
-
-
-    public void serverHelloMessage(String serverCertificate) throws Exception {
-        Pair<String, String> message1 = new Pair<>("MessageType", "ServerHello");
-        X509Certificate certificate = VerifyCertificate.readCertificate(serverCertificate);
-        Pair<String, String> message2 = new Pair<>("Certiifcate", certificate.toString());
-    }
-
-    public void forwardMessage(String targetHost, String targetPort) {
-        Pair<String, String> message1 = new Pair<>("MessageType", "Forward");
-        Pair<String, String> message2 = new Pair<>("TargetHost", targetHost);
-        Pair<String, String> message3 = new Pair<>("TargetPort", targetPort);
-    }
-
-
-
-    /* Where the client forwarder forwards data from  */
+//    /* Where the client forwarder forwards data from  */
 //    public static final String serverHost = "localhost";
 //    public static final int serverPort = 4412;
 //
@@ -64,8 +29,120 @@ public class Handshake {
 //    public static int targetPort = 6789;
 
 
-    public static final String serverHost = "portfw.kth.se";
-    public static final int serverPort = 4412;
-    public static final String targetHost = "server.kth.se";
-    public static int targetPort = 6789;
-}
+    public String targetHost;
+    public int targetPort;
+
+    public String serverHost;
+    public int serverPort;
+
+    HandshakeMessage handshakeMessage = new HandshakeMessage();
+
+    public void clientHello(Socket socket, String certFile) {
+        try {
+            handshakeMessage.putParameter("MessageType", "ClientHello");
+            handshakeMessage.send(socket);
+            X509Certificate certificate = VerifyCertificate.readCertificate(certFile);
+            handshakeMessage.putParameter("Certificate", certificateToString(certificate));
+            handshakeMessage.send(socket);
+            Logger.log("ClientHello message sent to " + socket);
+        } catch (Exception exception) {
+            System.out.println("ClientHello message sending failed!");
+        }
+    }
+
+    public void receiveClientHello(Socket clientSocket, String caFile) {
+        try {
+            handshakeMessage.receive(clientSocket);
+            if (handshakeMessage.getParameter("MessageType").equals("ClientHello")) {
+                handshakeMessage.receive(clientSocket);
+                String cert = handshakeMessage.getParameter("Certificate");
+                X509Certificate clientCertificate = VerifyCertificate.createCertificate(cert);
+                verifyCertificate(caFile, clientCertificate);
+                Logger.log("Client certificate verification successful from " + clientSocket);
+            } else throw new Exception();
+        } catch (Exception exception) {
+            System.out.println("Client certificate verification failed!");
+        }
+    }
+
+    public void serverHello(Socket clientSocket, String certFile) {
+        try {
+            handshakeMessage.putParameter("MessageType", "ServerHello");
+            handshakeMessage.send(clientSocket);
+            X509Certificate serverCertificate = VerifyCertificate.readCertificate(certFile);
+            handshakeMessage.putParameter("Certificate", certificateToString(serverCertificate));
+            handshakeMessage.send(clientSocket);
+            Logger.log("ServerHello message sent to " + clientSocket);
+        } catch (Exception exception) {
+            System.out.println("ServerHello message sending failed!");
+            exception.printStackTrace();
+        }
+    }
+
+    public void receiveServerHello(Socket socket, String cacert) {
+        try {
+            handshakeMessage.receive(socket);
+            if (handshakeMessage.getParameter("MessageType").equals("ServerHello")) {
+                handshakeMessage.receive(socket);
+                String cert = handshakeMessage.getParameter("Certificate");
+                X509Certificate certificate = VerifyCertificate.createCertificate(cert);
+                verifyCertificate(cacert, certificate);
+                Logger.log("Server certificate verification successful from " + socket);
+            } else throw new Exception();
+        } catch (Exception exception) {
+            System.out.println("Server certificate verification failed!");
+        }
+    }
+
+    public void forward(Socket socket, String targetHost, String targetPort) {
+        try {
+            handshakeMessage.putParameter("MessageType", "Forward");
+            handshakeMessage.send(socket);
+            handshakeMessage.putParameter("TargetHost", targetHost);
+            handshakeMessage.send(socket);
+            handshakeMessage.putParameter("TargetPort", targetPort);
+            handshakeMessage.send(socket);
+            Logger.log("Forward message sent to " + socket);
+        } catch (Exception exception) {
+            System.out.println("Forward message sending failed!");
+            exception.printStackTrace();
+        }
+    }
+
+    public void receiveForward(Socket clientSocket) {
+        try {
+            handshakeMessage.receive(clientSocket);
+            if (handshakeMessage.getParameter("MessageType").equals("Forward")) {
+                handshakeMessage.receive(clientSocket);
+                targetHost = handshakeMessage.getParameter("TargetHost");
+                handshakeMessage.receive(clientSocket);
+                targetPort = Integer.valueOf(handshakeMessage.getParameter("TargetPort"));
+                Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
+            } else throw new Exception();
+        } catch (Exception exception) {
+            System.out.println("Forward message handling failed!");
+            exception.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+    public String getTargetHost() {
+        return targetHost;
+    }
+
+    public int getTargetPort() {
+        return targetPort;
+    }
+
+    public String getServerHost() {
+        return serverHost;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+
+    }

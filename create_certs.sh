@@ -1,13 +1,14 @@
 #!/bin/bash
 # creates CA, server and client certificates
-# use with $ sh create_certs "Bob Smith bob@smith.com"
+# use with $ sh create_certs "bob@smith.com"
 
-name_and_mail=$1
+mail=$1
 
 subj="/C=SE\
-/ST=Stockholm\
-/OU=KTH Royal Institute of Technology\
-/CN=$name_and_mail"
+/L=Stockholm\
+/O=KTH\
+/OU=IK2206 Internet Security and Privacy\
+/CN"
 
 # create CA certificate with RSA key (not encrypted [-nodes])
 openssl req \
@@ -16,7 +17,7 @@ openssl req \
    -x509 \
    -newkey rsa:2048 \
    -nodes \
-   -subj "$subj Certificate Authority" \
+   -subj "$subj=ca-pf.ik2206.kth.se/emailAddress=$mail" \
    -keyout ca-private.pem \
    -out ca.pem
 
@@ -33,7 +34,7 @@ openssl req \
    -new \
    -newkey rsa:2048 \
    -nodes \
-   -subj "$subj Server" \
+   -subj "$subj=server-pf.ik2206.kth.se/emailAddress=$mail" \
    -keyout server-private.pem \
    -out server.csr
 
@@ -43,7 +44,7 @@ openssl req \
    -new \
    -newkey rsa:2048 \
    -nodes \
-   -subj "$subj Client" \
+   -subj "$subj=client-pf.ik2206.kth.se/emailAddress=$mail" \
    -keyout client-private.pem \
    -out client.csr
 

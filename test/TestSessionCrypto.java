@@ -39,7 +39,7 @@ public class TestSessionCrypto {
         // Now ciphertext is in cipher output file. Decrypt it back to plaintext.
 
         // Create decrypter instance using cipher parameters from encrypter
-        SessionDecrypter sessiondecrypter = new SessionDecrypter(sessionencrypter.encodeKey(), sessionencrypter.encodeIV());
+        SessionDecrypter sessiondecrypter = new SessionDecrypter(sessionencrypter.encodeStringKey(), sessionencrypter.encodeStringIv());
 
         // Attach input file to decrypter, and open output file
         try (

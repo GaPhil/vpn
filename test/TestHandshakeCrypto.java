@@ -9,8 +9,8 @@ import java.security.PublicKey;
  * Test the crypto_utils.Handshake Crypto; extract key pair, encrypt, decrypt, compare.
  */
 public class TestHandshakeCrypto {
-    private static String PRIVATEKEYFILE = "private_key_user.pem";
-    private static String CERTFILE = "cert_user.pem";
+    private static String PRIVATEKEYFILE = "client-private.pem";
+    private static String CERTFILE = "client.pem";
     private static String PLAINTEXT = "Time flies like an arrow. Fruit flies like a banana.";
     private static String ENCODING = "UTF-8";
 

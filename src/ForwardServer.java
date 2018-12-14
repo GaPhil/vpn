@@ -56,93 +56,13 @@ public class ForwardServer {
 
         System.out.println("Handling handshake from client!");
 
-        try {
-            HandshakeMessage receiveClientHello = new HandshakeMessage();
-            receiveClientHello.receive(clientSocket);
-            receiveClientHello.getParameter("MessageType");
-            receiveClientHello.receive(clientSocket);
-            String cert = receiveClientHello.getParameter("Certificate");
-            clientCertificate = VerifyCertificate.createCertificate(cert);
-            verifyCertificate("ca.pem", clientCertificate);
-            Logger.log("Client certificate verification successful from " + clientHostPort);
-        } catch (Exception exception) {
-            System.out.println("Client certificate verification failed!");
-        }
-        try {
-            HandshakeMessage serverHello = new HandshakeMessage();
-            serverHello.putParameter("MessageType", "ServerHello");
-            serverHello.send(clientSocket);
-            X509Certificate serverCertificate = VerifyCertificate.readCertificate(arguments.get("usercert"));
-            serverHello.putParameter("Certificate", certificateToString(serverCertificate));
-            serverHello.send(clientSocket);
-            Logger.log("ServerHello message sent to " + clientHostPort);
-        } catch (Exception exception) {
-            System.out.println("ServerHello message sending failed!");
-            exception.printStackTrace();
-        }
+        Handshake handshake = new Handshake();
+        handshake.receiveClientHello(clientSocket,arguments.get("cacert"));
+        handshake.serverHello(clientSocket, arguments.get("usercert"));
+        handshake.receiveForward(clientSocket);
+        handshake.session(clientSocket, arguments.get("usercert"));
 
-
-        // if the server agrees to do port forwarding to the destination, it
-        // will set up the session. For this the server needs to generate
-        // session key and IV. Server creates a socket end point, and returns
-        // the corresponding TCP port number.
-
-        try {
-            HandshakeMessage receiveForward = new HandshakeMessage();
-            receiveForward.receive(clientSocket);
-            receiveForward.getParameter("MessageType");
-            receiveForward.receive(clientSocket);
-            targetHost = receiveForward.getParameter("TargetHost");
-            receiveForward.receive(clientSocket);
-            targetPort = Integer.valueOf(receiveForward.getParameter("TargetPort"));
-            Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
-        } catch (Exception exception) {
-            System.out.println("Forward message handling failed!");
-            exception.printStackTrace();
-        }
-        try {
-            HandshakeMessage session = new HandshakeMessage();
-            session.putParameter("MessageType", "Session");
-            session.send(clientSocket);
-
-            SessionEncrypter sessionEncrypter = new SessionEncrypter(128);
-            HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-
-            PublicKey clientPublicKey = clientCertificate.getPublicKey();
-            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeStringKey().getBytes(), clientPublicKey);
-
-
-            System.out.println("Ther are the bytes: " + Arrays.toString(encryptedSessionKey));
-
-            String sessionKey = Base64.getEncoder().encodeToString(encryptedSessionKey);
-
-            session.putParameter("SessionKey", sessionKey);
-            session.send(clientSocket);
-
-
-            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIv(), clientCertificate.getPublicKey());
-            String sessionIv = Base64.getEncoder().encodeToString(encryptedSessionIv);
-            session.putParameter("SessionIV", sessionIv);
-            session.send(clientSocket);
-
-            System.out.println("Plain text key: " + sessionEncrypter.encodeStringKey());
-            System.out.println("Plain text vi: " + sessionEncrypter.encodeStringIv());
-            System.out.println("Sent the following encrypted session key: " + sessionKey);
-            System.out.println("Sent the following encrypted session iv: " + sessionIv);
-
-//            listenSocket = new ServerSocket();
-//            listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
-//
-//            session.putParameter("ServerHost", listenSocket.getInetAddress().toString());
-//            session.send(clientSocket);
-//
-//            session.putParameter("ServerPort", Integer.toString(listenSocket.getLocalPort()));
-            System.out.println("Session message sending done!");
-
-        } catch (Exception exception) {
-            System.out.println("Session message sending failed!");
-            exception.printStackTrace();
-        }
+        System.out.println("Handshake done!");
 
         clientSocket.close();
 
@@ -163,8 +83,8 @@ public class ForwardServer {
         /* The final destination. The ForwardServer sets up port forwarding
          * between the listensocket (ie., ServerHost/ServerPort) and the target.
          */
-        targetHost = Handshake.targetHost;
-        targetPort = Handshake.targetPort;
+        targetHost = handshake.getTargetHost();
+        targetPort = handshake.getTargetPort();
     }
 
     /**

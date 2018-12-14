@@ -1,21 +1,11 @@
-import crypto_utils.*;
+import crypto_utils.Handshake;
 import utils.Arguments;
-import utils.Logger;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.Arrays;
-import java.util.Base64;
-
-import static crypto_utils.VerifyCertificate.certificateToString;
-import static crypto_utils.VerifyCertificate.verifyCertificate;
 
 /**
  * Port forwarding client. Forward data between two TCP ports. Based on Nakov
@@ -47,104 +37,10 @@ public class ForwardClient {
         /* This is where the handshake should take place */
         System.out.println("Initialising handshake to server! ");
 
-        try {
-            HandshakeMessage clientHello = new HandshakeMessage();
-            clientHello.putParameter("MessageType", "ClientHello");
-            clientHello.send(socket);
-            X509Certificate certificate = VerifyCertificate.readCertificate(arguments.get("usercert"));
-            clientHello.putParameter("Certificate", certificateToString(certificate));
-            clientHello.send(socket);
-            Logger.log("ClientHello message sent to " + socket);
-        } catch (Exception exception) {
-            System.out.println("ClientHello message sending failed!");
-        }
-        try {
-            HandshakeMessage receiveServerHello = new HandshakeMessage();
-            receiveServerHello.receive(socket);
-            receiveServerHello.getParameter("MessageType");
-            receiveServerHello.receive(socket);
-            String cert = receiveServerHello.getParameter("Certificate");
-            X509Certificate certificate = VerifyCertificate.createCertificate(cert);
-            verifyCertificate("ca.pem", certificate);
-            Logger.log("Server certificate verification successful from " + socket);
-        } catch (Exception exception) {
-            System.out.println("Server certificate verification failed!");
-        }
-        try {
-            serverHost = Handshake.serverHost;
-            serverPort = Handshake.serverPort;
-            HandshakeMessage forward = new HandshakeMessage();
-            forward.putParameter("MessageType", "Forward");
-            forward.send(socket);
-            forward.putParameter("TargetHost", serverHost);
-            forward.send(socket);
-            forward.putParameter("TargetPort", Integer.toString(serverPort));
-            forward.send(socket);
-            Logger.log("Forward message sent to " + socket);
-        } catch (Exception exception) {
-            System.out.println("Forward message sending failed!");
-            exception.printStackTrace();
-        }
-
-        try {
-            HandshakeMessage receiveSession = new HandshakeMessage();
-            receiveSession.receive(socket);
-            receiveSession.getParameter("MessageType");
-
-            receiveSession.receive(socket);
-            String encryptedSessionKey = receiveSession.getParameter("SessionKey");
-            System.out.println("This enc key arrived: " + encryptedSessionKey);
-
-            HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-
-            PrivateKey privateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(arguments.get("key"));
-
-
-
-//            String decodeSessionKey = new String(Base64.getDecoder().decode(encryptedSessionKey));
-
-//            System.out.println("Decoded session key: \n" + decodeSessionKey);
-
-//            System.out.println("The bytes are: " + Arrays.toString(decodeSessionKey.getBytes("UTF-8")));
-
-
-            System.out.println("The key is: " + Arrays.toString(privateKey.getEncoded()));
-
-
-            // TODO: FAILURE POINT - DECRYPTION NOT WORKING
-            byte[] sessionKey = handshakeCrypto.decrypt(Base64.getDecoder().decode(encryptedSessionKey), privateKey);
-
-
-
-
-
-            System.out.println("decryption worked");
-
-
-//            String sessionKeys = new String(Base64.getDecoder().decode(encryptedSessionKey.getBytes()));
-
-
-//            System.out.println("This is the decrypted session key: " + sessionKeys);
-
-//            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionDecrypter..encodeStringKey().getBytes(), clientCertificate.getPublicKey());
-
-
-            System.out.println("Getting keys now3");
-            receiveSession.receive(socket);
-            String encryptedIv = receiveSession.getParameter("SessionIV");
-            byte[] sessionIv = handshakeCrypto.decrypt(encryptedIv.getBytes(), privateKey);
-            SessionDecrypter sessionDecrypter = new SessionDecrypter(Arrays.toString(sessionKey), Arrays.toString(sessionIv));
-
-//            System.out.println("Successful decryption of shit: " + sessionDecrypter.encodeKey() + sessionDecrypter.encodeIv());
-
-            System.out.println("Plain text key: " + sessionDecrypter.encodeStringKey());
-            System.out.println("Plaing text vi: " + sessionDecrypter.encodeStringIv());
-            System.out.println("Sent the following encrypted session key: " + sessionKey);
-            System.out.println("Sent the following encrypted session iv: " + sessionIv);
-
-        } catch (Exception exception) {
-
-        }
+        Handshake handshake = new Handshake();
+        handshake.clientHello(socket, arguments.get("usercert"));
+        handshake.receiveServerHello(socket, arguments.get("cacert"));
+        handshake.forward(socket, arguments.get("targethost"), arguments.get("targetport"));
 
 
         socket.close();
@@ -159,8 +55,8 @@ public class ForwardClient {
          * to ForwardClient during the handshake (ServerHost, ServerPort parameters).
          * Here, we use a static address instead.
          */
-        serverHost = Handshake.serverHost;
-        serverPort = Handshake.serverPort;
+        serverHost = handshake.getServerHost();
+        serverPort = handshake.getServerPort();
     }
 
     /*

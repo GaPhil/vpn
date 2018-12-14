@@ -59,7 +59,10 @@ public class Handshake {
                 X509Certificate clientCertificate = VerifyCertificate.createCertificate(cert);
                 verifyCertificate(caFile, clientCertificate);
                 Logger.log("Client certificate verification successful from " + clientSocket);
-            } else throw new Exception();
+            } else {
+                clientSocket.close();
+                throw new Exception();
+            }
         } catch (Exception exception) {
             System.out.println("Client certificate verification failed!");
         }
@@ -88,7 +91,10 @@ public class Handshake {
                 X509Certificate certificate = VerifyCertificate.createCertificate(cert);
                 verifyCertificate(cacert, certificate);
                 Logger.log("Server certificate verification successful from " + socket);
-            } else throw new Exception();
+            } else {
+                socket.close();
+                throw new Exception();
+            }
         } catch (Exception exception) {
             System.out.println("Server certificate verification failed!");
         }
@@ -118,7 +124,10 @@ public class Handshake {
                 handshakeMessage.receive(clientSocket);
                 targetPort = Integer.valueOf(handshakeMessage.getParameter("TargetPort"));
                 Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
-            } else throw new Exception();
+            } else {
+                clientSocket.close();
+                throw new Exception();
+            }
         } catch (Exception exception) {
             System.out.println("Forward message handling failed!");
             exception.printStackTrace();
@@ -126,8 +135,111 @@ public class Handshake {
     }
 
 
+    public void session(Socket clientSocket, String certFile) {
+        try {
+            handshakeMessage.putParameter("MessageType", "Session");
+            handshakeMessage.send(clientSocket);
+            SessionEncrypter sessionEncrypter = new SessionEncrypter(128);
+            HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
+            X509Certificate clientCertificate = VerifyCertificate.createCertificate(certFile);
+            PublicKey clientPublicKey = clientCertificate.getPublicKey();
+            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeStringKey().getBytes(), clientPublicKey);
+
+            String sessionKey = Base64.getEncoder().encodeToString(encryptedSessionKey);
+
+            handshakeMessage.putParameter("SessionKey", sessionKey);
+            handshakeMessage.send(clientSocket);
 
 
+            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIv(), clientCertificate.getPublicKey());
+            String sessionIv = Base64.getEncoder().encodeToString(encryptedSessionIv);
+            handshakeMessage.putParameter("SessionIV", sessionIv);
+            handshakeMessage.send(clientSocket);
+
+            System.out.println("Plain text key: " + sessionEncrypter.encodeStringKey());
+            System.out.println("Plain text vi: " + sessionEncrypter.encodeStringIv());
+            System.out.println("Sent the following encrypted session key: " + sessionKey);
+            System.out.println("Sent the following encrypted session iv: " + sessionIv);
+
+            System.out.println("Session message sending done!");
+
+        } catch (Exception exception) {
+            System.out.println("Session message sending failed!");
+            exception.printStackTrace();
+        }
+
+    }
+
+
+    // if the server agrees to do port forwarding to the destination, it
+    // will set up the session. For this the server needs to generate
+    // session key and IV. Server creates a socket end point, and returns
+    // the corresponding TCP port number.
+
+
+//
+//
+//
+//        try
+//
+//    {
+//        HandshakeMessage receiveSession = new HandshakeMessage();
+//        receiveSession.receive(socket);
+//        receiveSession.getParameter("MessageType");
+//
+//        receiveSession.receive(socket);
+//        String encryptedSessionKey = receiveSession.getParameter("SessionKey");
+//        System.out.println("This enc key arrived: " + encryptedSessionKey);
+//
+//        HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
+//
+//        PrivateKey privateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(arguments.get("key"));
+//
+//
+////            String decodeSessionKey = new String(Base64.getDecoder().decode(encryptedSessionKey));
+//
+////            System.out.println("Decoded session key: \n" + decodeSessionKey);
+//
+////            System.out.println("The bytes are: " + Arrays.toString(decodeSessionKey.getBytes("UTF-8")));
+//
+//
+//        System.out.println("The key is: " + Arrays.toString(privateKey.getEncoded()));
+//
+//
+//        // TODO: FAILURE POINT - DECRYPTION NOT WORKING
+//        byte[] sessionKey = handshakeCrypto.decrypt(Base64.getDecoder().decode(encryptedSessionKey), privateKey);
+//
+//
+//        System.out.println("decryption worked");
+//
+//
+////            String sessionKeys = new String(Base64.getDecoder().decode(encryptedSessionKey.getBytes()));
+//
+//
+////            System.out.println("This is the decrypted session key: " + sessionKeys);
+//
+////            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionDecrypter..encodeStringKey().getBytes(), clientCertificate.getPublicKey());
+//
+//
+//        System.out.println("Getting keys now3");
+//        receiveSession.receive(socket);
+//        String encryptedIv = receiveSession.getParameter("SessionIV");
+//        byte[] sessionIv = handshakeCrypto.decrypt(encryptedIv.getBytes(), privateKey);
+//        SessionDecrypter sessionDecrypter = new SessionDecrypter(Arrays.toString(sessionKey), Arrays.toString(sessionIv));
+//
+////            System.out.println("Successful decryption of shit: " + sessionDecrypter.encodeKey() + sessionDecrypter.encodeIv());
+//
+//        System.out.println("Plain text key: " + sessionDecrypter.encodeStringKey());
+//        System.out.println("Plaing text vi: " + sessionDecrypter.encodeStringIv());
+//        System.out.println("Sent the following encrypted session key: " + sessionKey);
+//        System.out.println("Sent the following encrypted session iv: " + sessionIv);
+//
+//    } catch(
+//    Exception exception)
+//
+//    {
+//
+//    }
 
 
     public String getTargetHost() {
@@ -146,3 +258,4 @@ public class Handshake {
         return serverPort;
 
     }
+}

@@ -4,11 +4,15 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
@@ -59,22 +63,13 @@ public class HandshakeCrypto {
     }
 
     /**
-     * Returns RSA private key from private key file in PEM format.
-     * First converts key file to der format and then reads in PKCS8.
+     * Returns RSA private key from private key file in DER format.
      *
      * @param keyFile private RSA key file in PEM format
      * @return RSA private key
      */
     public static PrivateKey getPrivateKeyFromKeyFile(String keyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        String file = keyFile.substring(0, keyFile.lastIndexOf("."));
-        String outFile = file + ".der";
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("openssl", "pkcs8", "-nocrypt", "-topk8", "-inform", "PEM", "-in", keyFile, "-outform", "DER", "-out", outFile);
-            processBuilder.start();
-        } catch (Exception exception) {
-            System.out.println("Key conversion failed!");
-        }
-        Path path = Paths.get(outFile);
+        Path path = Paths.get(keyFile);
         byte[] privateKeyFileName = Files.readAllBytes(path);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyFileName);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");

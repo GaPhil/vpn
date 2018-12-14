@@ -66,3 +66,20 @@ openssl x509 \
    -CAkey ca-private.pem \
    -CAcreateserial \
    -out client.pem
+
+# export private keys to DER format
+openssl pkcs8 \
+   -nocrypt \
+   -topk8 \
+   -inform PEM \
+   -in server-private.pem \
+   -outform DER \
+   -out server-private.der
+
+openssl pkcs8 \
+   -nocrypt \
+   -topk8 \
+   -inform PEM \
+   -in client-private.pem \
+   -outform DER \
+   -out client-private.der

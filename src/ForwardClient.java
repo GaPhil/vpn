@@ -1,6 +1,4 @@
-import crypto_utils.Handshake;
-import crypto_utils.HandshakeMessage;
-import crypto_utils.VerifyCertificate;
+import crypto_utils.*;
 import utils.Arguments;
 import utils.Logger;
 
@@ -9,7 +7,12 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.Arrays;
+import java.util.Base64;
 
 import static crypto_utils.VerifyCertificate.certificateToString;
 import static crypto_utils.VerifyCertificate.verifyCertificate;
@@ -48,7 +51,7 @@ public class ForwardClient {
             HandshakeMessage clientHello = new HandshakeMessage();
             clientHello.putParameter("MessageType", "ClientHello");
             clientHello.send(socket);
-            X509Certificate certificate = VerifyCertificate.readCertificate("client.pem");
+            X509Certificate certificate = VerifyCertificate.readCertificate(arguments.get("usercert"));
             clientHello.putParameter("Certificate", certificateToString(certificate));
             clientHello.send(socket);
             Logger.log("ClientHello message sent to " + socket);
@@ -83,7 +86,65 @@ public class ForwardClient {
             exception.printStackTrace();
         }
 
+        try {
+            HandshakeMessage receiveSession = new HandshakeMessage();
+            receiveSession.receive(socket);
+            receiveSession.getParameter("MessageType");
 
+            receiveSession.receive(socket);
+            String encryptedSessionKey = receiveSession.getParameter("SessionKey");
+            System.out.println("This enc key arrived: " + encryptedSessionKey);
+
+            HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
+
+            PrivateKey privateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(arguments.get("key"));
+
+
+
+//            String decodeSessionKey = new String(Base64.getDecoder().decode(encryptedSessionKey));
+
+//            System.out.println("Decoded session key: \n" + decodeSessionKey);
+
+//            System.out.println("The bytes are: " + Arrays.toString(decodeSessionKey.getBytes("UTF-8")));
+
+
+            System.out.println("The key is: " + Arrays.toString(privateKey.getEncoded()));
+
+
+            // TODO: FAILURE POINT - DECRYPTION NOT WORKING
+            byte[] sessionKey = handshakeCrypto.decrypt(Base64.getDecoder().decode(encryptedSessionKey), privateKey);
+
+
+
+
+
+            System.out.println("decryption worked");
+
+
+//            String sessionKeys = new String(Base64.getDecoder().decode(encryptedSessionKey.getBytes()));
+
+
+//            System.out.println("This is the decrypted session key: " + sessionKeys);
+
+//            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionDecrypter..encodeStringKey().getBytes(), clientCertificate.getPublicKey());
+
+
+            System.out.println("Getting keys now3");
+            receiveSession.receive(socket);
+            String encryptedIv = receiveSession.getParameter("SessionIV");
+            byte[] sessionIv = handshakeCrypto.decrypt(encryptedIv.getBytes(), privateKey);
+            SessionDecrypter sessionDecrypter = new SessionDecrypter(Arrays.toString(sessionKey), Arrays.toString(sessionIv));
+
+//            System.out.println("Successful decryption of shit: " + sessionDecrypter.encodeKey() + sessionDecrypter.encodeIv());
+
+            System.out.println("Plain text key: " + sessionDecrypter.encodeStringKey());
+            System.out.println("Plaing text vi: " + sessionDecrypter.encodeStringIv());
+            System.out.println("Sent the following encrypted session key: " + sessionKey);
+            System.out.println("Sent the following encrypted session iv: " + sessionIv);
+
+        } catch (Exception exception) {
+
+        }
 
 
         socket.close();

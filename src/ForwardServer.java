@@ -7,7 +7,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Base64;
 
 import static crypto_utils.VerifyCertificate.certificateToString;
 import static crypto_utils.VerifyCertificate.verifyCertificate;
@@ -69,7 +72,7 @@ public class ForwardServer {
             HandshakeMessage serverHello = new HandshakeMessage();
             serverHello.putParameter("MessageType", "ServerHello");
             serverHello.send(clientSocket);
-            X509Certificate serverCertificate = VerifyCertificate.readCertificate("server.pem");
+            X509Certificate serverCertificate = VerifyCertificate.readCertificate(arguments.get("usercert"));
             serverHello.putParameter("Certificate", certificateToString(serverCertificate));
             serverHello.send(clientSocket);
             Logger.log("ServerHello message sent to " + clientHostPort);
@@ -101,24 +104,41 @@ public class ForwardServer {
             HandshakeMessage session = new HandshakeMessage();
             session.putParameter("MessageType", "Session");
             session.send(clientSocket);
+
             SessionEncrypter sessionEncrypter = new SessionEncrypter(128);
             HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeKey(), clientCertificate.getPublicKey());
-            String sessionKey = new String(encryptedSessionKey);
+
+            PublicKey clientPublicKey = clientCertificate.getPublicKey();
+            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeStringKey().getBytes(), clientPublicKey);
+
+
+            System.out.println("Ther are the bytes: " + Arrays.toString(encryptedSessionKey));
+
+            String sessionKey = Base64.getEncoder().encodeToString(encryptedSessionKey);
+
             session.putParameter("SessionKey", sessionKey);
             session.send(clientSocket);
-            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIV(), clientCertificate.getPublicKey());
-            String sessionIv = new String(encryptedSessionIv);
+
+
+            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIv(), clientCertificate.getPublicKey());
+            String sessionIv = Base64.getEncoder().encodeToString(encryptedSessionIv);
             session.putParameter("SessionIV", sessionIv);
             session.send(clientSocket);
 
-            listenSocket = new ServerSocket();
-            listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
+            System.out.println("Plain text key: " + sessionEncrypter.encodeStringKey());
+            System.out.println("Plain text vi: " + sessionEncrypter.encodeStringIv());
+            System.out.println("Sent the following encrypted session key: " + sessionKey);
+            System.out.println("Sent the following encrypted session iv: " + sessionIv);
 
-            session.putParameter("ServerHost", listenSocket.getInetAddress().toString());
-            session.send(clientSocket);
+//            listenSocket = new ServerSocket();
+//            listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
+//
+//            session.putParameter("ServerHost", listenSocket.getInetAddress().toString());
+//            session.send(clientSocket);
+//
+//            session.putParameter("ServerPort", Integer.toString(listenSocket.getLocalPort()));
+            System.out.println("Session message sending done!");
 
-            session.putParameter("ServerPort", Integer.toString(listenSocket.getLocalPort()));
         } catch (Exception exception) {
             System.out.println("Session message sending failed!");
             exception.printStackTrace();

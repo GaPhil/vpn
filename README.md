@@ -8,7 +8,7 @@ Virtual private network using AES session key, performing secure handshake with 
 * `$ cd vpn`
 
 In order for the handshake to work, three certificates are needed; one for the CA as well as one for the server and client (`ca.pem`, `server.pem` and `client.pem`):
-* create three certificates: `$ sh create_certs.sh "<name> <email>"`
+* create three certificates: `$ sh create_certs.sh "<email>"`
 * verify certificates: 
   * compile: `$ javac src/verifyCertificate.java` 
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem server.pem`

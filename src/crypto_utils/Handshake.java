@@ -141,7 +141,7 @@ public class Handshake {
         HandshakeMessage toClient = new HandshakeMessage();
         try {
             PublicKey clientPublicKey = clientCert.getPublicKey();
-            sessionKey = new SessionKey(128);
+            sessionKey = new SessionKey(256);
             SecureRandom randomByteGenerator = new SecureRandom();
             iv = new IvParameterSpec(randomByteGenerator.generateSeed(16));
 

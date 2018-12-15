@@ -1,6 +1,5 @@
 package crypto_utils;
 
-
 import utils.Logger;
 
 import javax.crypto.spec.IvParameterSpec;
@@ -18,33 +17,19 @@ import static crypto_utils.VerifyCertificate.verifyCertificate;
  * Created by GaPhil on 2018-12-09.
  */
 public class Handshake {
-    /* Static data -- replace with handshake! */
-
-
-//    /* Where the client forwarder forwards data from  */
-//    public static final String serverHost = "localhost";
-//    public static final int serverPort = 4412;
-//
-//    /* The final destination */
-//    public static String targetHost = "localhost";
-//    public static int targetPort = 6789;
-
 
     private String targetHost;
     private int targetPort;
 
-    public static String serverHost;
-    public static int serverPort;
+    private static String serverHost;
+    private static int serverPort;
+
+    private HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
 
     private X509Certificate clientCert;
     private X509Certificate serverCert;
-
-    //    HandshakeMessage handshakeMessage = new HandshakeMessage();
-    HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-
     private SessionKey sessionKey;
     private IvParameterSpec iv;
-
 
     public void clientHello(Socket socket, String certFile) {
         HandshakeMessage toServer = new HandshakeMessage();
@@ -208,12 +193,6 @@ public class Handshake {
         }
     }
 
-    // if the server agrees to do port forwarding to the destination, it
-    // will set up the session. For this the server needs to generate
-    // session key and IV. Server creates a socket end point, and returns
-    // the corresponding TCP port number.
-
-
     public String getTargetHost() {
         return targetHost;
     }
@@ -228,6 +207,5 @@ public class Handshake {
 
     public int getServerPort() {
         return serverPort;
-
     }
 }

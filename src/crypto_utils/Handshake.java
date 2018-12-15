@@ -3,11 +3,13 @@ package crypto_utils;
 
 import utils.Logger;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Base64;
 
 import static crypto_utils.VerifyCertificate.certificateToString;
@@ -35,15 +37,24 @@ public class Handshake {
     public String serverHost;
     public int serverPort;
 
-    HandshakeMessage handshakeMessage = new HandshakeMessage();
+    private X509Certificate clientCert;
+    private X509Certificate serverCert;
+
+    //    HandshakeMessage handshakeMessage = new HandshakeMessage();
+    HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
+
+    private SessionKey sessionKey;
+    private IvParameterSpec iv;
+
 
     public void clientHello(Socket socket, String certFile) {
+        HandshakeMessage toServer = new HandshakeMessage();
         try {
-            handshakeMessage.putParameter("MessageType", "ClientHello");
-            handshakeMessage.send(socket);
-            X509Certificate certificate = VerifyCertificate.readCertificate(certFile);
-            handshakeMessage.putParameter("Certificate", certificateToString(certificate));
-            handshakeMessage.send(socket);
+            toServer.putParameter("MessageType", "ClientHello");
+            toServer.send(socket);
+            clientCert = VerifyCertificate.readCertificate(certFile);
+            toServer.putParameter("Certificate", certificateToString(clientCert));
+            toServer.send(socket);
             Logger.log("ClientHello message sent to " + socket);
         } catch (Exception exception) {
             System.out.println("ClientHello message sending failed!");
@@ -51,13 +62,14 @@ public class Handshake {
     }
 
     public void receiveClientHello(Socket clientSocket, String caFile) {
+        HandshakeMessage fromClient = new HandshakeMessage();
         try {
-            handshakeMessage.receive(clientSocket);
-            if (handshakeMessage.getParameter("MessageType").equals("ClientHello")) {
-                handshakeMessage.receive(clientSocket);
-                String cert = handshakeMessage.getParameter("Certificate");
-                X509Certificate clientCertificate = VerifyCertificate.createCertificate(cert);
-                verifyCertificate(caFile, clientCertificate);
+            fromClient.receive(clientSocket);
+            if (fromClient.getParameter("MessageType").equals("ClientHello")) {
+                fromClient.receive(clientSocket);
+                String cert = fromClient.getParameter("Certificate");
+                clientCert = VerifyCertificate.createCertificate(cert);
+                verifyCertificate(caFile, clientCert);
                 Logger.log("Client certificate verification successful from " + clientSocket);
             } else {
                 clientSocket.close();
@@ -69,12 +81,13 @@ public class Handshake {
     }
 
     public void serverHello(Socket clientSocket, String certFile) {
+        HandshakeMessage toClient = new HandshakeMessage();
         try {
-            handshakeMessage.putParameter("MessageType", "ServerHello");
-            handshakeMessage.send(clientSocket);
-            X509Certificate serverCertificate = VerifyCertificate.readCertificate(certFile);
-            handshakeMessage.putParameter("Certificate", certificateToString(serverCertificate));
-            handshakeMessage.send(clientSocket);
+            toClient.putParameter("MessageType", "ServerHello");
+            toClient.send(clientSocket);
+            serverCert = VerifyCertificate.readCertificate(certFile);
+            toClient.putParameter("Certificate", certificateToString(serverCert));
+            toClient.send(clientSocket);
             Logger.log("ServerHello message sent to " + clientSocket);
         } catch (Exception exception) {
             System.out.println("ServerHello message sending failed!");
@@ -82,14 +95,15 @@ public class Handshake {
         }
     }
 
-    public void receiveServerHello(Socket socket, String cacert) {
+    public void receiveServerHello(Socket socket, String caCert) {
+        HandshakeMessage fromServer = new HandshakeMessage();
         try {
-            handshakeMessage.receive(socket);
-            if (handshakeMessage.getParameter("MessageType").equals("ServerHello")) {
-                handshakeMessage.receive(socket);
-                String cert = handshakeMessage.getParameter("Certificate");
-                X509Certificate certificate = VerifyCertificate.createCertificate(cert);
-                verifyCertificate(cacert, certificate);
+            fromServer.receive(socket);
+            if (fromServer.getParameter("MessageType").equals("ServerHello")) {
+                fromServer.receive(socket);
+                String cert = fromServer.getParameter("Certificate");
+                serverCert = VerifyCertificate.createCertificate(cert);
+                verifyCertificate(caCert, serverCert);
                 Logger.log("Server certificate verification successful from " + socket);
             } else {
                 socket.close();
@@ -101,13 +115,14 @@ public class Handshake {
     }
 
     public void forward(Socket socket, String targetHost, String targetPort) {
+        HandshakeMessage toServer = new HandshakeMessage();
         try {
-            handshakeMessage.putParameter("MessageType", "Forward");
-            handshakeMessage.send(socket);
-            handshakeMessage.putParameter("TargetHost", targetHost);
-            handshakeMessage.send(socket);
-            handshakeMessage.putParameter("TargetPort", targetPort);
-            handshakeMessage.send(socket);
+            toServer.putParameter("MessageType", "Forward");
+            toServer.send(socket);
+            toServer.putParameter("TargetHost", targetHost);
+            toServer.send(socket);
+            toServer.putParameter("TargetPort", targetPort);
+            toServer.send(socket);
             Logger.log("Forward message sent to " + socket);
         } catch (Exception exception) {
             System.out.println("Forward message sending failed!");
@@ -116,13 +131,14 @@ public class Handshake {
     }
 
     public void receiveForward(Socket clientSocket) {
+        HandshakeMessage fromClient = new HandshakeMessage();
         try {
-            handshakeMessage.receive(clientSocket);
-            if (handshakeMessage.getParameter("MessageType").equals("Forward")) {
-                handshakeMessage.receive(clientSocket);
-                targetHost = handshakeMessage.getParameter("TargetHost");
-                handshakeMessage.receive(clientSocket);
-                targetPort = Integer.valueOf(handshakeMessage.getParameter("TargetPort"));
+            fromClient.receive(clientSocket);
+            if (fromClient.getParameter("MessageType").equals("Forward")) {
+                fromClient.receive(clientSocket);
+                targetHost = fromClient.getParameter("TargetHost");
+                fromClient.receive(clientSocket);
+                targetPort = Integer.valueOf(fromClient.getParameter("TargetPort"));
                 Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
             } else {
                 clientSocket.close();
@@ -134,112 +150,84 @@ public class Handshake {
         }
     }
 
-
-    public void session(Socket clientSocket, String certFile) {
+    public void session(Socket clientSocket) {
+        HandshakeMessage toClient = new HandshakeMessage();
         try {
-            handshakeMessage.putParameter("MessageType", "Session");
-            handshakeMessage.send(clientSocket);
-            SessionEncrypter sessionEncrypter = new SessionEncrypter(128);
+            toClient.putParameter("MessageType", "Session");
+            toClient.send(clientSocket);
+
+            sessionKey = new SessionKey(128);
+            SecureRandom randomByteGenerator = new SecureRandom();
+            iv = new IvParameterSpec(randomByteGenerator.generateSeed(16));
+
+            PublicKey clientPublicKey = clientCert.getPublicKey();
+            System.out.println(clientCert.getSubjectDN());
             HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-            X509Certificate clientCertificate = VerifyCertificate.createCertificate(certFile);
-            PublicKey clientPublicKey = clientCertificate.getPublicKey();
-            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionEncrypter.encodeStringKey().getBytes(), clientPublicKey);
 
-            String sessionKey = Base64.getEncoder().encodeToString(encryptedSessionKey);
+            System.out.println("This is the session key in clear: " + sessionKey.encodeKey());
+            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionKey.encodeKey().getBytes(), clientPublicKey);
+            System.out.println("this is the session key about to be sent: " + Base64.getEncoder().encodeToString(encryptedSessionKey));
 
-            handshakeMessage.putParameter("SessionKey", sessionKey);
-            handshakeMessage.send(clientSocket);
+            toClient.putParameter("SessionKey", Base64.getEncoder().encodeToString(encryptedSessionKey));
+            toClient.send(clientSocket);
 
+//            byte[] encryptedSessionIv = handshakeCrypto.encrypt(iv.getIV(), clientCertificate.getPublicKey());
 
-            byte[] encryptedSessionIv = handshakeCrypto.encrypt(sessionEncrypter.encodeIv(), clientCertificate.getPublicKey());
-            String sessionIv = Base64.getEncoder().encodeToString(encryptedSessionIv);
-            handshakeMessage.putParameter("SessionIV", sessionIv);
-            handshakeMessage.send(clientSocket);
+//            toClient.putParameter("SessionIV", Base64.getEncoder().encodeToString(encryptedSessionIv));
+//            toClient.send(clientSocket);
 
-            System.out.println("Plain text key: " + sessionEncrypter.encodeStringKey());
-            System.out.println("Plain text vi: " + sessionEncrypter.encodeStringIv());
-            System.out.println("Sent the following encrypted session key: " + sessionKey);
-            System.out.println("Sent the following encrypted session iv: " + sessionIv);
-
-            System.out.println("Session message sending done!");
+            System.out.println("Sent all the stuff to the client");
 
         } catch (Exception exception) {
             System.out.println("Session message sending failed!");
             exception.printStackTrace();
         }
-
     }
 
+    public void receiveSession(Socket socket, String privateKeyFile) {
+        HandshakeMessage fromServer = new HandshakeMessage();
+        try {
+            fromServer.receive(socket);
+            if (fromServer.getParameter("MessageType").equals("Session")) {
+                PrivateKey clientsPrivateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(privateKeyFile);
+                Cipher cipherKey = Cipher.getInstance("RSA");
+                Cipher cipherIV = Cipher.getInstance("RSA");
+                cipherKey.init(Cipher.DECRYPT_MODE, clientsPrivateKey);
+                cipherIV.init(Cipher.DECRYPT_MODE, clientsPrivateKey);
+
+                fromServer.receive(socket);
+                String sessionKeyString = fromServer.getParameter("SessionKey");
+
+
+                byte[] decryptedSessionKeyAsBytes = cipherKey.doFinal(Base64.getDecoder().decode(sessionKeyString));
+
+                System.out.println("This is the decrypted key " + new String(decryptedSessionKeyAsBytes));
+
+
+                fromServer.receive(socket);
+                String sessionIvString = fromServer.getParameter("SessionIV");
+
+                byte[] decryptedIVAsBytes = cipherIV.doFinal(Base64.getDecoder().decode(sessionIvString));
+                String decryptedSessionKeyAsString = new String(decryptedSessionKeyAsBytes);
+
+                sessionKey = new SessionKey(decryptedSessionKeyAsString);
+                iv = new IvParameterSpec(decryptedIVAsBytes);
+
+                System.out.println("Handshake complete!");
+
+            } else {
+                socket.close();
+                throw new Exception();
+            }
+        } catch (Exception exception) {
+
+        }
+    }
 
     // if the server agrees to do port forwarding to the destination, it
     // will set up the session. For this the server needs to generate
     // session key and IV. Server creates a socket end point, and returns
     // the corresponding TCP port number.
-
-
-//
-//
-//
-//        try
-//
-//    {
-//        HandshakeMessage receiveSession = new HandshakeMessage();
-//        receiveSession.receive(socket);
-//        receiveSession.getParameter("MessageType");
-//
-//        receiveSession.receive(socket);
-//        String encryptedSessionKey = receiveSession.getParameter("SessionKey");
-//        System.out.println("This enc key arrived: " + encryptedSessionKey);
-//
-//        HandshakeCrypto handshakeCrypto = new HandshakeCrypto();
-//
-//        PrivateKey privateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(arguments.get("key"));
-//
-//
-////            String decodeSessionKey = new String(Base64.getDecoder().decode(encryptedSessionKey));
-//
-////            System.out.println("Decoded session key: \n" + decodeSessionKey);
-//
-////            System.out.println("The bytes are: " + Arrays.toString(decodeSessionKey.getBytes("UTF-8")));
-//
-//
-//        System.out.println("The key is: " + Arrays.toString(privateKey.getEncoded()));
-//
-//
-//        // TODO: FAILURE POINT - DECRYPTION NOT WORKING
-//        byte[] sessionKey = handshakeCrypto.decrypt(Base64.getDecoder().decode(encryptedSessionKey), privateKey);
-//
-//
-//        System.out.println("decryption worked");
-//
-//
-////            String sessionKeys = new String(Base64.getDecoder().decode(encryptedSessionKey.getBytes()));
-//
-//
-////            System.out.println("This is the decrypted session key: " + sessionKeys);
-//
-////            byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionDecrypter..encodeStringKey().getBytes(), clientCertificate.getPublicKey());
-//
-//
-//        System.out.println("Getting keys now3");
-//        receiveSession.receive(socket);
-//        String encryptedIv = receiveSession.getParameter("SessionIV");
-//        byte[] sessionIv = handshakeCrypto.decrypt(encryptedIv.getBytes(), privateKey);
-//        SessionDecrypter sessionDecrypter = new SessionDecrypter(Arrays.toString(sessionKey), Arrays.toString(sessionIv));
-//
-////            System.out.println("Successful decryption of shit: " + sessionDecrypter.encodeKey() + sessionDecrypter.encodeIv());
-//
-//        System.out.println("Plain text key: " + sessionDecrypter.encodeStringKey());
-//        System.out.println("Plaing text vi: " + sessionDecrypter.encodeStringIv());
-//        System.out.println("Sent the following encrypted session key: " + sessionKey);
-//        System.out.println("Sent the following encrypted session iv: " + sessionIv);
-//
-//    } catch(
-//    Exception exception)
-//
-//    {
-//
-//    }
 
 
     public String getTargetHost() {

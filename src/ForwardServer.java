@@ -3,9 +3,7 @@ import utils.Arguments;
 import utils.Logger;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.security.cert.X509Certificate;
 
 /**
@@ -28,7 +26,6 @@ public class ForwardServer {
 
 
     private ServerSocket handshakeSocket;
-
     private ServerSocket listenSocket;
     private String targetHost;
     private int targetPort;
@@ -53,11 +50,6 @@ public class ForwardServer {
         handshake.receiveClientHello(clientSocket, arguments.get("cacert"));
         handshake.serverHello(clientSocket, arguments.get("usercert"));
         handshake.receiveForward(clientSocket);
-        handshake.session(clientSocket);
-
-        System.out.println("Handshake done!");
-
-        clientSocket.close();
 
         /*
          * Fake the handshake result with static parameters.
@@ -70,8 +62,16 @@ public class ForwardServer {
          * Here, we use a static address instead (serverHost/serverPort).
          * (This may give "Address already in use" errors, but that's OK for now.)
          */
-//        listenSocket = new ServerSocket();
+        listenSocket = new ServerSocket(0, 10, InetAddress.getLocalHost());
 //        listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
+
+
+        handshake.session(clientSocket, InetAddress.getLocalHost().getHostAddress(), listenSocket.getLocalPort());
+
+        System.out.println("Handshake done!");
+
+        clientSocket.close();
+
 
         /* The final destination. The ForwardServer sets up port forwarding
          * between the listensocket (ie., ServerHost/ServerPort) and the target.

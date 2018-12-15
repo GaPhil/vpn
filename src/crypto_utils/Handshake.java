@@ -30,11 +30,11 @@ public class Handshake {
 //    public static int targetPort = 6789;
 
 
-    public String targetHost;
-    public int targetPort;
+    private String targetHost;
+    private int targetPort;
 
-    public String serverHost;
-    public int serverPort;
+    public static String serverHost;
+    public static int serverPort;
 
     private X509Certificate clientCert;
     private X509Certificate serverCert;
@@ -149,11 +149,10 @@ public class Handshake {
         }
     }
 
-    public void session(Socket clientSocket) {
+    public void session(Socket clientSocket, String serverHost, int serverPort) {
         HandshakeMessage toClient = new HandshakeMessage();
         try {
             PublicKey clientPublicKey = clientCert.getPublicKey();
-
             sessionKey = new SessionKey(128);
             SecureRandom randomByteGenerator = new SecureRandom();
             iv = new IvParameterSpec(randomByteGenerator.generateSeed(16));
@@ -166,6 +165,11 @@ public class Handshake {
             toClient.putParameter("SessionKey", Base64.getEncoder().encodeToString(encryptedSessionKey));
             toClient.send(clientSocket);
             toClient.putParameter("SessionIV", Base64.getEncoder().encodeToString(encryptedSessionIv));
+            toClient.send(clientSocket);
+
+            toClient.putParameter("ServerHost", serverHost);
+            toClient.send(clientSocket);
+            toClient.putParameter("ServerPort", String.valueOf(serverPort));
             toClient.send(clientSocket);
             Logger.log("Session message sent");
         } catch (Exception exception) {
@@ -183,18 +187,17 @@ public class Handshake {
                 String sessionKeyString = fromServer.getParameter("SessionKey");
                 fromServer.receive(socket);
                 String sessionIvString = fromServer.getParameter("SessionIV");
+                fromServer.receive(socket);
+                serverHost = fromServer.getParameter("ServerHost");
+                fromServer.receive(socket);
+                serverPort = Integer.valueOf(fromServer.getParameter("ServerPort"));
 
                 PrivateKey clientsPrivateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(privateKeyFile);
-                byte[] decryptedSessionKeyAsBytes = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionKeyString), clientsPrivateKey);
-                byte[] decryptedIVAsBytes = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionIvString), clientsPrivateKey);
+                byte[] decryptedSessionKey = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionKeyString), clientsPrivateKey);
+                byte[] decryptedIv = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionIvString), clientsPrivateKey);
 
-                String decryptedSessionKeyAsString = new String(decryptedSessionKeyAsBytes);
-                sessionKey = new SessionKey(decryptedSessionKeyAsString);
-                iv = new IvParameterSpec(decryptedIVAsBytes);
-
-                System.out.println("This is the decrypted key " + new String(decryptedSessionKeyAsBytes));
-                System.out.println("This is the IV: " + iv.getIV().toString());
-                System.out.println("Handshake complete!");
+                sessionKey = new SessionKey(new String(decryptedSessionKey));
+                iv = new IvParameterSpec(decryptedIv);
             } else {
                 socket.close();
                 throw new Exception();

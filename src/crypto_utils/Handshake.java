@@ -42,6 +42,7 @@ public class Handshake {
             Logger.log("ClientHello message sent to " + socket);
         } catch (Exception exception) {
             System.out.println("ClientHello message sending failed!");
+            exception.printStackTrace();
         }
     }
 
@@ -61,6 +62,7 @@ public class Handshake {
             }
         } catch (Exception exception) {
             System.out.println("Client certificate verification failed!");
+            exception.printStackTrace();
         }
     }
 
@@ -95,6 +97,7 @@ public class Handshake {
             }
         } catch (Exception exception) {
             System.out.println("Server certificate verification failed!");
+            exception.printStackTrace();
         }
     }
 

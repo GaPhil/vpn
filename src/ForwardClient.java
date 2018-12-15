@@ -41,7 +41,7 @@ public class ForwardClient {
         handshake.clientHello(socket, arguments.get("usercert"));
         handshake.receiveServerHello(socket, arguments.get("cacert"));
         handshake.forward(socket, arguments.get("targethost"), arguments.get("targetport"));
-
+        handshake.receiveSession(socket, arguments.get("key"));
 
         socket.close();
 

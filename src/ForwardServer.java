@@ -1,19 +1,12 @@
-import crypto_utils.*;
+import crypto_utils.Handshake;
 import utils.Arguments;
 import utils.Logger;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Base64;
-
-import static crypto_utils.VerifyCertificate.certificateToString;
-import static crypto_utils.VerifyCertificate.verifyCertificate;
 
 /**
  * Port forwarding server. Forward data between two TCP ports. Based on Nakov
@@ -57,10 +50,10 @@ public class ForwardServer {
         System.out.println("Handling handshake from client!");
 
         Handshake handshake = new Handshake();
-        handshake.receiveClientHello(clientSocket,arguments.get("cacert"));
+        handshake.receiveClientHello(clientSocket, arguments.get("cacert"));
         handshake.serverHello(clientSocket, arguments.get("usercert"));
         handshake.receiveForward(clientSocket);
-        handshake.session(clientSocket, arguments.get("usercert"));
+        handshake.session(clientSocket);
 
         System.out.println("Handshake done!");
 

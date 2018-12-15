@@ -16,19 +16,19 @@ In order for the handshake to work, three certificates are needed; one for the C
   
 ### Start the server:
 * compile: `$ javac $(find ./src/* | grep .java)`
-* run: 
-```bash
+* run:
+```
 $ java ForwardServer --handshakeport=2206 --usercert=server.pem \
-   --cacert=ca.pem --key=server-private.der
+       --cacert=ca.pem --key=server-private.der
 ```
 
 ### Start the client:
 * compile: `$ javac $(find ./src/* | grep .java)`
 * run: 
-```bash
+```
 $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
-   --targethost=server.kth.se --targetport=6789 \
-   --usercert=client.pem --cacert=ca.pem --key=client-private.der
+       --targethost=server.kth.se --targetport=6789 \
+       --usercert=client.pem --cacert=ca.pem --key=client-private.der
 ```
 
 ## Handshake Protocol 
@@ -39,7 +39,6 @@ $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
   * Session key is securely exchanged using public-key cryptography
 * Server creates server port; a new TCP endpoint to which the client connects
   * Communication over this connection is encrypted using symmetric encryption
-
 ```
   CLIENT                                                                  SERVER
     |                                                                       |
@@ -62,8 +61,8 @@ $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
 
 ### Asymmetric Keys
 * Server key pair: 2048-bit RSA key, created with openssl
-* Client key pair:2 048-bit RSA key, created with openssl
-* CA key pair: 2048-bit RSA key, created with openssl
+* Client key pair: 2048-bit RSA key, created with openssl
+* CA key pair:     2048-bit RSA key, created with openssl
 
 ### Symmetric Keys
-* Session key: AES 256-bit key, used in CTR mode, created with SunJCE Provider
+* Session key:     AES 256-bit key, used in CTR mode, created with SunJCE Provider

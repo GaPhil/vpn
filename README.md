@@ -1,12 +1,12 @@
 # vpn
-
 Secure TCP port forwarding application; using AES session key, performing secure handshake with X.509 certificates.
 
 ## Getting started
 
-* clone with SSH: `$ git lcone git@github.com:GaPhil/vpn.git`<br>*(or clone with HTTPS: `$ git clone https://github.com/GaPhil/vpn.git`)*
+* clone with SSH: `$ git clone git@github.com:GaPhil/vpn.git`<br>*(or clone with HTTPS: `$ git clone https://github.com/GaPhil/vpn.git`)*
 * `$ cd vpn`
 
+### Create certificates
 In order for the handshake to work, three certificates are needed; one for the CA as well as one for the server and client (`ca.pem`, `server.pem` and `client.pem`):
 * create three certificates: `$ sh create_certs.sh "<email>"`
 * verify certificates: 
@@ -14,7 +14,7 @@ In order for the handshake to work, three certificates are needed; one for the C
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem server.pem`
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem client.pem`
   
-Start the server:
+### Start the server:
 * compile: `$ javac $(find ./src/* | grep .java)`
 * run: 
 ```bash
@@ -22,7 +22,7 @@ $ java ForwardServer --handshakeport=2206 --usercert=server.pem \
    --cacert=ca.pem --key=server-private.der
 ```
 
-Start the client:
+### Start the client:
 * compile: `$ javac $(find ./src/* | grep .java)`
 * run: 
 ```bash
@@ -32,6 +32,13 @@ $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
 ```
 
 ## Handshake Protocol 
+* Client and server authenticate each other
+  * X.509 certificate exchange
+* Client requests forwarding to a target server
+* Server creates symmetric session key for session encryption
+  * Session key is securely exchanged using public-key cryptography
+* Server creates server port; a new TCP endpoint to which the client connects
+  * Communication over this connection is encrypted using symmetric encryption
 
 ```
   CLIENT                                                                  SERVER
@@ -49,5 +56,14 @@ $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
     |------<-----------<-----------<-----------<-----------<-----------<----|
     |                                                                       |
   CLIENT                                                                  SERVER
-
 ```
+
+## Key Specifications
+
+### Asymmetric Keys
+* Server key pair: 2048-bit RSA key, created with openssl
+* Client key pair:2 048-bit RSA key, created with openssl
+* CA key pair: 2048-bit RSA key, created with openssl
+
+### Symmetric Keys
+* Session key: AES 256-bit key, used in CTR mode, created with SunJCE Provider

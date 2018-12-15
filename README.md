@@ -1,6 +1,6 @@
 # vpn
 
-Virtual private network using AES session key, performing secure handshake with X.509 certificates.
+Secure TCP port forwarding application; using AES session key, performing secure handshake with X.509 certificates.
 
 ## Getting started
 
@@ -29,4 +29,25 @@ Start the client:
 $ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
    --targethost=server.kth.se --targetport=6789 \
    --usercert=client.pem --cacert=ca.pem --key=client-private.der
+```
+
+## Handshake Protocol 
+
+```
+  CLIENT                                                                  SERVER
+    |                                                                       |
+ 1  |                      ClientHello, Certificate                         |
+    |------>----------->----------->----------->----------->----------->----|
+    |                                                                       |
+ 2  |                      ServerHello, Certificate                         |
+    |------<-----------<-----------<-----------<-----------<-----------<----|
+    |                                                                       |
+ 3  |                    Forward, TargetHost, TargetPort                    |
+    |------>----------->----------->----------->----------->----------->----|
+    |                                                                       |
+ 4  |        Session, SessionKey, SessionIV, ServerHost, ServerPort         |
+    |------<-----------<-----------<-----------<-----------<-----------<----|
+    |                                                                       |
+  CLIENT                                                                  SERVER
+
 ```

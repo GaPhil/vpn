@@ -3,7 +3,6 @@ package crypto_utils;
 
 import utils.Logger;
 
-import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import java.net.Socket;
 import java.security.PrivateKey;
@@ -180,42 +179,29 @@ public class Handshake {
         try {
             fromServer.receive(socket);
             if (fromServer.getParameter("MessageType").equals("Session")) {
-                PrivateKey clientsPrivateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(privateKeyFile);
-
-                Cipher cipherKey = Cipher.getInstance("RSA");
-                Cipher cipherIV = Cipher.getInstance("RSA");
-                cipherKey.init(Cipher.DECRYPT_MODE, clientsPrivateKey);
-                cipherIV.init(Cipher.DECRYPT_MODE, clientsPrivateKey);
-
                 fromServer.receive(socket);
                 String sessionKeyString = fromServer.getParameter("SessionKey");
-
-                byte[] decryptedSessionKeyAsBytes = cipherKey.doFinal(Base64.getDecoder().decode(sessionKeyString));
-
-                System.out.println("This is the decrypted key " + new String(decryptedSessionKeyAsBytes));
-
                 fromServer.receive(socket);
                 String sessionIvString = fromServer.getParameter("SessionIV");
 
-                byte[] decryptedIVAsBytes = cipherIV.doFinal(Base64.getDecoder().decode(sessionIvString));
-                String decryptedSessionKeyAsString = new String(decryptedSessionKeyAsBytes);
+                PrivateKey clientsPrivateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(privateKeyFile);
+                byte[] decryptedSessionKeyAsBytes = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionKeyString), clientsPrivateKey);
+                byte[] decryptedIVAsBytes = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionIvString), clientsPrivateKey);
 
+                String decryptedSessionKeyAsString = new String(decryptedSessionKeyAsBytes);
                 sessionKey = new SessionKey(decryptedSessionKeyAsString);
                 iv = new IvParameterSpec(decryptedIVAsBytes);
 
+                System.out.println("This is the decrypted key " + new String(decryptedSessionKeyAsBytes));
                 System.out.println("This is the IV: " + iv.getIV().toString());
-
-
-
-
                 System.out.println("Handshake complete!");
-
             } else {
                 socket.close();
                 throw new Exception();
             }
         } catch (Exception exception) {
-
+            System.out.println("Session message receiving failed!");
+            exception.printStackTrace();
         }
     }
 

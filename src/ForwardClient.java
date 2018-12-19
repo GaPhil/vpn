@@ -1,4 +1,5 @@
 import crypto_utils.Handshake;
+import crypto_utils.SessionEncrypter;
 import utils.Arguments;
 
 import java.io.IOException;
@@ -24,11 +25,16 @@ public class ForwardClient {
     private static final String DEFAULTSERVERHOST = "localhost";
     private static final String PROGRAMNAME = "ForwardClient";
 
+    private static SessionEncrypter sessionEncrypter;
+
+
     private static Arguments arguments;
     private static int serverPort;
     private static String serverHost;
+    public static Handshake handshake = new Handshake();
 
-    private static void doHandshake() throws IOException {
+
+    private static void doHandshake() throws Exception {
 
         /* Connect to forward server server */
         System.out.println("Connect to " + arguments.get("handshakehost") + ":" + Integer.parseInt(arguments.get("handshakeport")));
@@ -37,7 +43,6 @@ public class ForwardClient {
         /* This is where the handshake should take place */
         System.out.println("Initialising handshake to server! ");
 
-        Handshake handshake = new Handshake();
         handshake.clientHello(socket, arguments.get("usercert"));
         handshake.receiveServerHello(socket, arguments.get("cacert"));
         handshake.forward(socket, arguments.get("targethost"), arguments.get("targetport"));
@@ -57,6 +62,9 @@ public class ForwardClient {
          */
         serverHost = handshake.getServerHost();
         serverPort = handshake.getServerPort();
+
+        sessionEncrypter = handshake.getSessionEncrypter();
+
     }
 
     /*
@@ -73,12 +81,11 @@ public class ForwardClient {
      * Run handshake negotiation, then set up a listening socket and wait for user.
      * When user has connected, start port forwarder thread.
      */
-    static private void startForwardClient() throws IOException {
+    static private void startForwardClient() throws Exception {
 
         doHandshake();
 
         // Wait for client. Accept one connection.
-
         ForwardServerClientThread forwardThread;
         ServerSocket listensocket;
 
@@ -96,7 +103,7 @@ public class ForwardClient {
             String clientHostPort = clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
             log("Accepted client from " + clientHostPort);
 
-            forwardThread = new ForwardServerClientThread(clientSocket, serverHost, serverPort);
+            forwardThread = new ForwardServerClientThread(clientSocket, serverHost, serverPort, sessionEncrypter);
             forwardThread.start();
 
         } catch (IOException e) {
@@ -133,7 +140,7 @@ public class ForwardClient {
      * Program entry point. Reads arguments and run
      * the forward server
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try {
             arguments = new Arguments();
             arguments.setDefault("handshakeport", Integer.toString(DEFAULTSERVERPORT));

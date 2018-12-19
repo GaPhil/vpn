@@ -1,10 +1,12 @@
 import crypto_utils.Handshake;
+import crypto_utils.SessionDecrypter;
 import utils.Arguments;
 import utils.Logger;
 
 import java.io.IOException;
-import java.net.*;
-import java.security.cert.X509Certificate;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * Port forwarding server. Forward data between two TCP ports. Based on Nakov
@@ -30,15 +32,20 @@ public class ForwardServer {
     private String targetHost;
     private int targetPort;
 
+    private SessionDecrypter sessionDecrypter;
+
+
+    public static Handshake handshake = new Handshake();
+
+
     /**
      * Do handshake negotiation with client to authenticate, learn
      * target host/port, etc.
      */
-    private void doHandshake() throws UnknownHostException, IOException, Exception {
+    private void doHandshake() throws Exception {
 
         Socket clientSocket = handshakeSocket.accept();
         String clientHostPort = clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
-        X509Certificate clientCertificate = null;
 
         Logger.log("Incoming handshake connection from " + clientHostPort);
 
@@ -46,7 +53,6 @@ public class ForwardServer {
 
         System.out.println("Handling handshake from client!");
 
-        Handshake handshake = new Handshake();
         handshake.receiveClientHello(clientSocket, arguments.get("cacert"));
         handshake.serverHello(clientSocket, arguments.get("usercert"));
         handshake.receiveForward(clientSocket);
@@ -63,8 +69,6 @@ public class ForwardServer {
          * (This may give "Address already in use" errors, but that's OK for now.)
          */
         listenSocket = new ServerSocket(0, 10, InetAddress.getLocalHost());
-//        listenSocket.bind(new InetSocketAddress(Handshake.serverHost, Handshake.serverPort));
-
 
         handshake.session(clientSocket, InetAddress.getLocalHost().getHostAddress(), listenSocket.getLocalPort());
 
@@ -78,6 +82,9 @@ public class ForwardServer {
          */
         targetHost = handshake.getTargetHost();
         targetPort = handshake.getTargetPort();
+
+        sessionDecrypter = handshake.getSessionDecrypter();
+
     }
 
     /**
@@ -104,7 +111,7 @@ public class ForwardServer {
 
                 doHandshake();
 
-                forwardThread = new ForwardServerClientThread(this.listenSocket, this.targetHost, this.targetPort);
+                forwardThread = new ForwardServerClientThread(this.listenSocket, this.targetHost, this.targetPort, sessionDecrypter);
                 forwardThread.start();
             } catch (IOException e) {
                 throw e;

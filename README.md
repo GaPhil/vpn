@@ -23,7 +23,7 @@ $ java ForwardServer --handshakeport=2206 --usercert=../server.pem \
 ```
 
 ### Start the client:
-* compile: `$ javac $(find ./src/* | grep .java) && src`
+* compile: `$ javac $(find ./src/* | grep .java) && cd src`
 * run: 
 ```
 $ java ForwardClient --handshakehost=localhost --handshakeport=2206 \
@@ -65,4 +65,4 @@ $ java ForwardClient --handshakehost=localhost --handshakeport=2206 \
 * CA key pair:     2048-bit RSA key, created with openssl
 
 ### Symmetric Keys
-* Session key:     AES 256-bit key, used in CTR mode, created with SunJCE Provider
+* Session key:     AES 128-bit key, used in CTR mode, created with SunJCE Provider

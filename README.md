@@ -15,20 +15,20 @@ In order for the handshake to work, three certificates are needed; one for the C
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem client.pem`
   
 ### Start the server:
-* compile: `$ javac $(find ./src/* | grep .java)`
+* compile: `$ javac $(find ./src/* | grep .java) && cd src`
 * run:
 ```
-$ java ForwardServer --handshakeport=2206 --usercert=server.pem \
-       --cacert=ca.pem --key=server-private.der
+$ java ForwardServer --handshakeport=2206 --usercert=../server.pem \
+       --cacert=../ca.pem --key=../server-private.der
 ```
 
 ### Start the client:
-* compile: `$ javac $(find ./src/* | grep .java)`
+* compile: `$ javac $(find ./src/* | grep .java) && src`
 * run: 
 ```
-$ java ForwardClient --handshakehost=portfw.kth.se --handshakeport=2206 \
-       --targethost=server.kth.se --targetport=6789 \
-       --usercert=client.pem --cacert=ca.pem --key=client-private.der
+$ java ForwardClient --handshakehost=localhost --handshakeport=2206 \
+       --targethost=localhost --targetport=6789 \
+       --usercert=../client.pem --cacert=../ca.pem --key=../client-private.der
 ```
 
 ## Handshake Protocol 

@@ -38,6 +38,12 @@ public class SessionEncrypter {
         cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
+    public SessionEncrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+        this.sessionKey = sessionKey;
+        this.ivParameterSpec = ivParameterSpec;
+        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
+    }
+
     /**
      * The plain text data to be encrypted is sent to the crypto_utils.SessionEncrypter via
      * a CipherOutputStream associated with the crypto_utils.SessionEncrypter. The output
@@ -64,7 +70,7 @@ public class SessionEncrypter {
      *
      * @return Base64 encoded key
      */
-    public byte [] encodeKey() {
+    public byte[] encodeKey() {
         return sessionKey.encodeKey().getBytes();
     }
 

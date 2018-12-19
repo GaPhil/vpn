@@ -35,6 +35,12 @@ public class SessionDecrypter {
         this.cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
+    public SessionDecrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+        this.sessionKey = sessionKey;
+        this.ivParameterSpec = ivParameterSpec;
+        this.cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
+    }
+
     /**
      * The cipher text data to be decrypted is sent to the crypto_utils.SessionDecrypter via
      * an InputStream associated with the crypto_utils.SessionDecrypter. The output
@@ -61,7 +67,7 @@ public class SessionDecrypter {
      *
      * @return Base64 encoded key
      */
-    public byte [] encodeKey() {
+    public byte[] encodeKey() {
         return sessionKey.encodeKey().getBytes();
     }
 

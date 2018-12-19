@@ -29,7 +29,7 @@ public class Handshake {
     private X509Certificate clientCert;
     private X509Certificate serverCert;
     private SessionKey sessionKey;
-    private IvParameterSpec iv;
+    private IvParameterSpec ivParameterSpec;
 
     public void clientHello(Socket socket, String certFile) {
         HandshakeMessage toServer = new HandshakeMessage();
@@ -141,12 +141,12 @@ public class Handshake {
         HandshakeMessage toClient = new HandshakeMessage();
         try {
             PublicKey clientPublicKey = clientCert.getPublicKey();
-            sessionKey = new SessionKey(256);
+            sessionKey = new SessionKey(128);
             SecureRandom randomByteGenerator = new SecureRandom();
-            iv = new IvParameterSpec(randomByteGenerator.generateSeed(16));
+            ivParameterSpec = new IvParameterSpec(randomByteGenerator.generateSeed(16));
 
             byte[] encryptedSessionKey = handshakeCrypto.encrypt(sessionKey.encodeKey().getBytes(), clientPublicKey);
-            byte[] encryptedSessionIv = handshakeCrypto.encrypt(iv.getIV(), clientPublicKey);
+            byte[] encryptedSessionIv = handshakeCrypto.encrypt(ivParameterSpec.getIV(), clientPublicKey);
 
             toClient.putParameter("MessageType", "Session");
             toClient.send(clientSocket);
@@ -185,7 +185,7 @@ public class Handshake {
                 byte[] decryptedIv = handshakeCrypto.decrypt(Base64.getDecoder().decode(sessionIvString), clientsPrivateKey);
 
                 sessionKey = new SessionKey(new String(decryptedSessionKey));
-                iv = new IvParameterSpec(decryptedIv);
+                ivParameterSpec = new IvParameterSpec(decryptedIv);
             } else {
                 socket.close();
                 throw new Exception();
@@ -194,6 +194,14 @@ public class Handshake {
             System.out.println("Session message receiving failed!");
             exception.printStackTrace();
         }
+    }
+
+    public SessionEncrypter getSessionEncrypter() throws Exception {
+        return new SessionEncrypter(this.sessionKey, this.ivParameterSpec);
+    }
+
+    public SessionDecrypter getSessionDecrypter() throws Exception {
+        return new SessionDecrypter(this.sessionKey, this.ivParameterSpec);
     }
 
     public String getTargetHost() {

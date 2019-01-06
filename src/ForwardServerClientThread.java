@@ -118,8 +118,8 @@ public class ForwardServerClientThread extends Thread {
             clientForward.start();
             serverForward.start();
 
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
     }
 

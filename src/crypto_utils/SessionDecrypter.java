@@ -17,7 +17,7 @@ import java.util.Base64;
  */
 public class SessionDecrypter {
 
-    private Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+    //    private Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
     private SessionKey sessionKey;
     private IvParameterSpec ivParameterSpec;
 
@@ -26,19 +26,12 @@ public class SessionDecrypter {
      * referred to as initialisation vector (IV) and initialises cipher used
      * for decryption.
      *
-     * @param key Session key in the form of a Baes64 encoded string
-     * @param iv  Initialisation vector in the form of a Base64 encoded string
+     * @param sessionKey      Session key in the form of a Baes64 encoded string
+     * @param ivParameterSpec Initialisation vector in the form of a Base64 encoded string
      */
-    public SessionDecrypter(String key, String iv) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
-        this.sessionKey = new SessionKey(key);
-        this.ivParameterSpec = new IvParameterSpec(Base64.getDecoder().decode(iv));
-        this.cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
-    }
-
-    public SessionDecrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+    public SessionDecrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) {
         this.sessionKey = sessionKey;
         this.ivParameterSpec = ivParameterSpec;
-        this.cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
     /**
@@ -49,7 +42,9 @@ public class SessionDecrypter {
      * @param inputStream encrypted input stream
      * @return plain text input stream
      */
-    public CipherInputStream openCipherInputStream(InputStream inputStream) {
+    public CipherInputStream openCipherInputStream(InputStream inputStream) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
         return new CipherInputStream(inputStream, cipher);
     }
 

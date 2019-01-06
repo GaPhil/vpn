@@ -18,7 +18,6 @@ import java.util.Base64;
  */
 public class SessionEncrypter {
 
-    private Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
     private SessionKey sessionKey;
     private IvParameterSpec ivParameterSpec;
 
@@ -29,19 +28,15 @@ public class SessionEncrypter {
      *
      * @param keyLength key length in bits
      */
-    public SessionEncrypter(Integer keyLength) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+    public SessionEncrypter(Integer keyLength) throws NoSuchAlgorithmException {
         this.sessionKey = new SessionKey(keyLength);
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] iv = new byte[cipher.getBlockSize()];
-        secureRandom.nextBytes(iv);
-        this.ivParameterSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
+        SecureRandom randomByteGenerator = new SecureRandom();
+        this.ivParameterSpec = new IvParameterSpec(randomByteGenerator.generateSeed(16));
     }
 
-    public SessionEncrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException {
+    public SessionEncrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException {
         this.sessionKey = sessionKey;
         this.ivParameterSpec = ivParameterSpec;
-        cipher.init(Cipher.ENCRYPT_MODE, sessionKey.getSecretKey(), ivParameterSpec);
     }
 
     /**
@@ -52,7 +47,9 @@ public class SessionEncrypter {
      * @param outputStream plain text output stream
      * @return encrypted output stream
      */
-    public CipherOutputStream openCipherOutputStream(OutputStream outputStream) {
+    public CipherOutputStream openCipherOutputStream(OutputStream outputStream) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, this.sessionKey.getSecretKey(), this.ivParameterSpec);
         return new CipherOutputStream(outputStream, cipher);
     }
 
@@ -70,8 +67,8 @@ public class SessionEncrypter {
      *
      * @return Base64 encoded key
      */
-    public byte[] encodeKey() {
-        return sessionKey.encodeKey().getBytes();
+    public String encodeKey() {
+        return this.sessionKey.encodeKey();
     }
 
     /**
@@ -90,7 +87,7 @@ public class SessionEncrypter {
      *
      * @return Base64 encoded initialisation vector (IV)
      */
-    public byte[] encodeIv() {
-        return Base64.getEncoder().encodeToString(ivParameterSpec.getIV()).getBytes();
+    public String encodeIV() {
+        return Base64.getEncoder().encodeToString(this.ivParameterSpec.getIV());
     }
 }

@@ -4,15 +4,11 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
@@ -69,10 +65,14 @@ public class HandshakeCrypto {
      * @return RSA private key
      */
     public static PrivateKey getPrivateKeyFromKeyFile(String keyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        Path path = Paths.get(keyFile);
-        byte[] privateKeyFileName = Files.readAllBytes(path);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyFileName);
+        File file = new File(keyFile);
+        FileInputStream fileStream = new FileInputStream(file);
+        DataInputStream dataStream = new DataInputStream(fileStream);
+        byte[] keyBytes = new byte[(int) file.length()];
+        dataStream.readFully(keyBytes);
+        dataStream.close();
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(keySpec);
+        return keyFactory.generatePrivate(spec);
     }
 }

@@ -57,6 +57,10 @@ $ java ForwardClient --handshakehost=localhost --handshakeport=2206 \
   CLIENT                                                                  SERVER
 ```
 
+## Demo
+
+![VPN](https://github.com/GaPhil/vpn/blob/master/vpn.gif)
+
 ## Key Specifications
 
 ### Asymmetric Keys
@@ -66,7 +70,3 @@ $ java ForwardClient --handshakehost=localhost --handshakeport=2206 \
 
 ### Symmetric Keys
 * Session key:     AES 128-bit key, used in CTR mode, created with SunJCE Provider
-
-
-![VPN](https://github.com/GaPhil/vpn/blob/master/vpn.gif)
-

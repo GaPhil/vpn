@@ -39,11 +39,13 @@ public class ForwardServerClientThread extends Thread {
      * A client socket should be connected and passed to this constructor.
      * A server socket is created later by run() method.
      */
-    public ForwardServerClientThread(Socket aClientSocket, String serverhost, int serverport, SessionEncrypter sessionEncrypter) {
+    public ForwardServerClientThread(Socket aClientSocket, String serverhost, int serverport, SessionEncrypter sessionEncrypter, SessionDecrypter sessionDecrypter) {
         mClientSocket = aClientSocket;
         mServerPort = serverport;
         mServerHost = serverhost;
+
         this.sessionEncrypter = sessionEncrypter;
+        this.sessionDecrypter = sessionDecrypter;
     }
 
     /**
@@ -51,13 +53,14 @@ public class ForwardServerClientThread extends Thread {
      * Wait for client to connect on client listening socket.
      * A server socket is created later by run() method.
      */
-    public ForwardServerClientThread(ServerSocket listensocket, String serverhost, int serverport, SessionDecrypter sessionDecrypter) throws IOException {
+    public ForwardServerClientThread(ServerSocket listensocket, String serverhost, int serverport, SessionDecrypter sessionDecrypter, SessionEncrypter sessionEncrypter) throws IOException {
         mListenSocket = listensocket;
-        //mServerHost =  listensocket.getInetAddress().getHostAddress();
+        mServerHost = listensocket.getInetAddress().getHostAddress();
         mServerPort = serverport;
         mServerHost = serverhost;
-        this.sessionDecrypter = sessionDecrypter;
 
+        this.sessionDecrypter = sessionDecrypter;
+        this.sessionEncrypter = sessionEncrypter;
     }
 
     public ServerSocket getListenSocket() {

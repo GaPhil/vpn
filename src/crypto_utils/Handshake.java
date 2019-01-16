@@ -31,6 +31,9 @@ public class Handshake {
     private SessionKey sessionKey;
     private IvParameterSpec ivParameterSpec;
 
+    private SessionEncrypter sessionEncrypter;
+    private SessionDecrypter sessionDecrypter;
+
     public void clientHello(Socket socket, String certFile) {
         HandshakeMessage toServer = new HandshakeMessage();
         try {
@@ -52,7 +55,7 @@ public class Handshake {
             fromClient.receive(clientSocket);
             if (fromClient.getParameter("MessageType").equals("ClientHello")) {
 
-               // fromClient.receive(clientSocket);
+                // fromClient.receive(clientSocket);
                 String cert = fromClient.getParameter("Certificate");
                 clientCert = VerifyCertificate.createCertificate(cert);
                 verifyCertificate(caFile, clientCert);
@@ -187,6 +190,9 @@ public class Handshake {
 
                 sessionKey = new SessionKey(new String(decryptedSessionKey));
                 ivParameterSpec = new IvParameterSpec(decryptedIv);
+                SessionEncrypter sessionEncrypter = new SessionEncrypter(this.sessionKey, this.ivParameterSpec);
+                SessionDecrypter sessionDecrypter = new SessionDecrypter(this.sessionKey, this.ivParameterSpec);
+
             } else {
                 socket.close();
                 throw new Exception();
@@ -198,11 +204,11 @@ public class Handshake {
     }
 
     public SessionEncrypter getSessionEncrypter() throws Exception {
-        return new SessionEncrypter(this.sessionKey, this.ivParameterSpec);
+        return sessionEncrypter;
     }
 
-    public SessionDecrypter getSessionDecrypter() throws Exception {
-        return new SessionDecrypter(this.sessionKey, this.ivParameterSpec);
+    public SessionDecrypter getSessionDecrypter() {
+        return sessionDecrypter;
     }
 
     public String getTargetHost() {

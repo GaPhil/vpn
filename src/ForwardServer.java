@@ -1,5 +1,6 @@
 import crypto_utils.Handshake;
 import crypto_utils.SessionDecrypter;
+import crypto_utils.SessionEncrypter;
 import utils.Arguments;
 import utils.Logger;
 
@@ -33,6 +34,7 @@ public class ForwardServer {
     private int targetPort;
 
     private SessionDecrypter sessionDecrypter;
+    private SessionEncrypter sessionEncrypter;
 
 
     public static Handshake handshake = new Handshake();
@@ -84,6 +86,7 @@ public class ForwardServer {
         targetPort = handshake.getTargetPort();
 
         sessionDecrypter = handshake.getSessionDecrypter();
+        sessionEncrypter = handshake.getSessionEncrypter();
 
     }
 
@@ -111,7 +114,7 @@ public class ForwardServer {
 
                 doHandshake();
 
-                forwardThread = new ForwardServerClientThread(this.listenSocket, this.targetHost, this.targetPort, sessionDecrypter);
+                forwardThread = new ForwardServerClientThread(this.listenSocket, this.targetHost, this.targetPort, sessionDecrypter, sessionEncrypter);
                 forwardThread.start();
             } catch (IOException e) {
                 throw e;

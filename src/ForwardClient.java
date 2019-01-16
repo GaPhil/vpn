@@ -1,4 +1,5 @@
 import crypto_utils.Handshake;
+import crypto_utils.SessionDecrypter;
 import crypto_utils.SessionEncrypter;
 import utils.Arguments;
 
@@ -26,7 +27,7 @@ public class ForwardClient {
     private static final String PROGRAMNAME = "ForwardClient";
 
     private static SessionEncrypter sessionEncrypter;
-
+    private static SessionDecrypter sessionDecrypter;
 
     private static Arguments arguments;
     private static int serverPort;
@@ -103,7 +104,7 @@ public class ForwardClient {
             String clientHostPort = clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
             log("Accepted client from " + clientHostPort);
 
-            forwardThread = new ForwardServerClientThread(clientSocket, serverHost, serverPort, sessionEncrypter);
+            forwardThread = new ForwardServerClientThread(clientSocket, serverHost, serverPort, sessionEncrypter, sessionDecrypter);
             forwardThread.start();
 
         } catch (IOException e) {

@@ -75,6 +75,7 @@ public class VerifyCertificate {
             userCertificate.checkValidity();
             System.out.println("Pass: Certificate valid.");
         } catch (Exception exception) {
+            exception.printStackTrace();
             System.out.println("Fail: Certificate not valid.");
         }
     }

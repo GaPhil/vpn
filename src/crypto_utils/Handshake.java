@@ -36,7 +36,7 @@ public class Handshake {
         try {
             clientCert = VerifyCertificate.readCertificate(certFile);
             toServer.putParameter("MessageType", "ClientHello");
-            toServer.send(socket);
+//            toServer.send(socket);
             toServer.putParameter("Certificate", certificateToString(clientCert));
             toServer.send(socket);
             Logger.log("ClientHello message sent to " + socket);
@@ -51,7 +51,8 @@ public class Handshake {
         try {
             fromClient.receive(clientSocket);
             if (fromClient.getParameter("MessageType").equals("ClientHello")) {
-                fromClient.receive(clientSocket);
+
+               // fromClient.receive(clientSocket);
                 String cert = fromClient.getParameter("Certificate");
                 clientCert = VerifyCertificate.createCertificate(cert);
                 verifyCertificate(caFile, clientCert);
@@ -70,7 +71,7 @@ public class Handshake {
         HandshakeMessage toClient = new HandshakeMessage();
         try {
             toClient.putParameter("MessageType", "ServerHello");
-            toClient.send(clientSocket);
+//            toClient.send(clientSocket);
             serverCert = VerifyCertificate.readCertificate(certFile);
             toClient.putParameter("Certificate", certificateToString(serverCert));
             toClient.send(clientSocket);
@@ -86,7 +87,7 @@ public class Handshake {
         try {
             fromServer.receive(socket);
             if (fromServer.getParameter("MessageType").equals("ServerHello")) {
-                fromServer.receive(socket);
+//                fromServer.receive(socket);
                 String cert = fromServer.getParameter("Certificate");
                 serverCert = VerifyCertificate.createCertificate(cert);
                 verifyCertificate(caCert, serverCert);
@@ -105,9 +106,9 @@ public class Handshake {
         HandshakeMessage toServer = new HandshakeMessage();
         try {
             toServer.putParameter("MessageType", "Forward");
-            toServer.send(socket);
+//            toServer.send(socket);
             toServer.putParameter("TargetHost", targetHost);
-            toServer.send(socket);
+//            toServer.send(socket);
             toServer.putParameter("TargetPort", targetPort);
             toServer.send(socket);
             Logger.log("Forward message sent to " + socket);
@@ -122,9 +123,9 @@ public class Handshake {
         try {
             fromClient.receive(clientSocket);
             if (fromClient.getParameter("MessageType").equals("Forward")) {
-                fromClient.receive(clientSocket);
+//                fromClient.receive(clientSocket);
                 targetHost = fromClient.getParameter("TargetHost");
-                fromClient.receive(clientSocket);
+//                fromClient.receive(clientSocket);
                 targetPort = Integer.valueOf(fromClient.getParameter("TargetPort"));
                 Logger.log("Forwarding set up to: " + targetHost + ":" + targetPort);
             } else {
@@ -149,14 +150,14 @@ public class Handshake {
             byte[] encryptedSessionIv = handshakeCrypto.encrypt(ivParameterSpec.getIV(), clientPublicKey);
 
             toClient.putParameter("MessageType", "Session");
-            toClient.send(clientSocket);
+//            toClient.send(clientSocket);
             toClient.putParameter("SessionKey", Base64.getEncoder().encodeToString(encryptedSessionKey));
-            toClient.send(clientSocket);
+//            toClient.send(clientSocket);
             toClient.putParameter("SessionIV", Base64.getEncoder().encodeToString(encryptedSessionIv));
-            toClient.send(clientSocket);
+//            toClient.send(clientSocket);
 
             toClient.putParameter("ServerHost", serverHost);
-            toClient.send(clientSocket);
+//            toClient.send(clientSocket);
             toClient.putParameter("ServerPort", String.valueOf(serverPort));
             toClient.send(clientSocket);
             Logger.log("Session message sent");
@@ -171,13 +172,13 @@ public class Handshake {
         try {
             fromServer.receive(socket);
             if (fromServer.getParameter("MessageType").equals("Session")) {
-                fromServer.receive(socket);
+//                fromServer.receive(socket);
                 String sessionKeyString = fromServer.getParameter("SessionKey");
-                fromServer.receive(socket);
+//                fromServer.receive(socket);
                 String sessionIvString = fromServer.getParameter("SessionIV");
-                fromServer.receive(socket);
+//                fromServer.receive(socket);
                 serverHost = fromServer.getParameter("ServerHost");
-                fromServer.receive(socket);
+//                fromServer.receive(socket);
                 serverPort = Integer.valueOf(fromServer.getParameter("ServerPort"));
 
                 PrivateKey clientsPrivateKey = HandshakeCrypto.getPrivateKeyFromKeyFile(privateKeyFile);

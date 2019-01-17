@@ -85,9 +85,6 @@ public class ForwardServer {
         targetHost = handshake.getTargetHost();
         targetPort = handshake.getTargetPort();
 
-        sessionDecrypter = handshake.getSessionDecrypter();
-        sessionEncrypter = handshake.getSessionEncrypter();
-
     }
 
     /**
@@ -114,7 +111,7 @@ public class ForwardServer {
 
                 doHandshake();
 
-                forwardThread = new ForwardServerClientThread(this.listenSocket, this.targetHost, this.targetPort, sessionDecrypter, sessionEncrypter);
+                forwardThread = new ForwardServerClientThread(listenSocket, targetHost, targetPort, handshake.sessionKey, handshake.sessionIv);
                 forwardThread.start();
             } catch (IOException e) {
                 throw e;

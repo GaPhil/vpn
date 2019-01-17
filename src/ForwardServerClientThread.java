@@ -2,11 +2,15 @@ import crypto_utils.SessionDecrypter;
 import crypto_utils.SessionEncrypter;
 import utils.Logger;
 
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * ForwardServerClientThread handles the clients of Nakov Forward Server. It
@@ -31,21 +35,24 @@ public class ForwardServerClientThread extends Thread {
     private int mServerPort;
     private String mServerHost;
 
-    private SessionEncrypter sessionEncrypter = null;
-    private SessionDecrypter sessionDecrypter = null;
+    private SessionEncrypter sessionEncrypter;
+    private SessionDecrypter sessionDecrypter;
+    private String user;
+
 
     /**
      * Creates a client thread for handling clients of NakovForwardServer.
      * A client socket should be connected and passed to this constructor.
      * A server socket is created later by run() method.
      */
-    public ForwardServerClientThread(Socket aClientSocket, String serverhost, int serverport, SessionEncrypter sessionEncrypter, SessionDecrypter sessionDecrypter) {
+    public ForwardServerClientThread(Socket aClientSocket, String serverhost, int serverport, byte[] sessionKey, byte[] sesssionIv) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         mClientSocket = aClientSocket;
         mServerPort = serverport;
         mServerHost = serverhost;
 
-        this.sessionEncrypter = sessionEncrypter;
-        this.sessionDecrypter = sessionDecrypter;
+        user = "client";
+        sessionEncrypter = new SessionEncrypter(sessionKey, sesssionIv);
+        sessionDecrypter = new SessionDecrypter(sessionKey, sesssionIv);
     }
 
     /**
@@ -53,14 +60,15 @@ public class ForwardServerClientThread extends Thread {
      * Wait for client to connect on client listening socket.
      * A server socket is created later by run() method.
      */
-    public ForwardServerClientThread(ServerSocket listensocket, String serverhost, int serverport, SessionDecrypter sessionDecrypter, SessionEncrypter sessionEncrypter) throws IOException {
+    public ForwardServerClientThread(ServerSocket listensocket, String serverhost, int serverport, byte[] sessionKey, byte[] sessionIv) throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         mListenSocket = listensocket;
         mServerHost = listensocket.getInetAddress().getHostAddress();
         mServerPort = serverport;
         mServerHost = serverhost;
 
-        this.sessionDecrypter = sessionDecrypter;
-        this.sessionEncrypter = sessionEncrypter;
+        user = "server";
+        sessionEncrypter = new SessionEncrypter(sessionKey, sessionIv);
+        sessionDecrypter = new SessionDecrypter(sessionKey, sessionIv);
     }
 
     public ServerSocket getListenSocket() {
@@ -104,15 +112,16 @@ public class ForwardServerClientThread extends Thread {
             InputStream serverIn = mServerSocket.getInputStream();
             OutputStream serverOut = mServerSocket.getOutputStream();
 
-            if (sessionEncrypter != null)
-                serverOut = sessionEncrypter.openCipherOutputStream(serverOut);
-
-            if (sessionDecrypter != null)
-                clientIn = sessionDecrypter.openCipherInputStream(clientIn);
-
-
             mServerHostPort = mServerHost + ":" + mServerPort;
             Logger.log("TCP Forwarding  " + mClientHostPort + " <--> " + mServerHostPort + "  started.");
+
+            if (user.equals("server")) {
+                clientIn = sessionDecrypter.openCipherInputStream(clientIn);
+                clientOut = sessionEncrypter.openCipherOutputStream(clientOut);
+            } else {
+                serverOut = sessionEncrypter.openCipherOutputStream(serverOut);
+                serverIn = sessionDecrypter.openCipherInputStream(serverIn);
+            }
 
             // Start forwarding of socket data between server and client
             ForwardThread clientForward = new ForwardThread(this, clientIn, serverOut);

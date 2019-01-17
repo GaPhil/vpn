@@ -17,8 +17,8 @@ import java.util.Base64;
  */
 public class SessionDecrypter {
 
-    //    private Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
     private SessionKey sessionKey;
+    private Cipher cipher;
     private IvParameterSpec ivParameterSpec;
 
     /**
@@ -27,11 +27,16 @@ public class SessionDecrypter {
      * for decryption.
      *
      * @param sessionKey      Session key in the form of a Baes64 encoded string
-     * @param ivParameterSpec Initialisation vector in the form of a Base64 encoded string
+     * @param iv Initialisation vector in the form of a Base64 encoded string
      */
-    public SessionDecrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) {
-        this.sessionKey = sessionKey;
-        this.ivParameterSpec = ivParameterSpec;
+    public SessionDecrypter (byte[] sessionKey, byte[] iv) {
+        try {
+            this.sessionKey = new SessionKey(sessionKey);
+            this.cipher = Cipher.getInstance("AES/CTR/NoPadding");
+            this.ivParameterSpec = new IvParameterSpec(iv);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

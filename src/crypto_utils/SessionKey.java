@@ -37,6 +37,14 @@ public class SessionKey {
         this.secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
     }
 
+    public SessionKey(byte[] key) {
+        try {
+            this.secretKey = new SecretKeySpec(key, 0, key.length, "AES");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Returns SecretKey from crypto_utils.SessionKey object
      *

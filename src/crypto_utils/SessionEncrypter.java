@@ -19,14 +19,15 @@ import java.util.Base64;
 public class SessionEncrypter {
 
     private SessionKey sessionKey;
+    private Cipher cipher;
     private IvParameterSpec ivParameterSpec;
 
     /**
      * Creates parameters needed for AES in CTR mode; namely key and counter
      * referred to as initialisation vector (IV) and initialises cipher used
      * for encryption.
-     *
-     * @param keyLength key length in bits
+     * <p>
+     * * @param keyLength key length in bits
      */
     public SessionEncrypter(Integer keyLength) throws NoSuchAlgorithmException {
         this.sessionKey = new SessionKey(keyLength);
@@ -34,9 +35,10 @@ public class SessionEncrypter {
         this.ivParameterSpec = new IvParameterSpec(randomByteGenerator.generateSeed(16));
     }
 
-    public SessionEncrypter(SessionKey sessionKey, IvParameterSpec ivParameterSpec) throws NoSuchPaddingException, NoSuchAlgorithmException {
-        this.sessionKey = sessionKey;
-        this.ivParameterSpec = ivParameterSpec;
+    public SessionEncrypter(byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException {
+        this.cipher = Cipher.getInstance("AES/CTR/NoPadding");
+        this.sessionKey = new SessionKey(key);
+        this.ivParameterSpec = new IvParameterSpec(iv);
     }
 
     /**
@@ -89,5 +91,13 @@ public class SessionEncrypter {
      */
     public String encodeIV() {
         return Base64.getEncoder().encodeToString(this.ivParameterSpec.getIV());
+    }
+
+    public byte[] getSecretKey() {
+        return this.sessionKey.getSecretKey().getEncoded();
+    }
+
+    public byte[] getIV() {
+        return this.ivParameterSpec.getIV();
     }
 }

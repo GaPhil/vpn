@@ -10,7 +10,7 @@ Secure TCP port forwarding application; using AES session key, performing secure
 In order for the handshake to work, three certificates are needed; one for the CA as well as one for the server and client (`ca.pem`, `server.pem` and `client.pem`):
 * create three certificates: `$ sh create_certs.sh "<email>"`
 * verify certificates: 
-  * compile: `$ javac src/verifyCertificate.java` 
+  * compile: `$ javac src/crypto_utils/verifyCertificate` 
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem server.pem`
   * run: `$ java src/crypto_utils/verifyCertificate ca.pem client.pem`
   

@@ -1,6 +1,7 @@
 .idea
 vpn.iml
 /out
+*.class
 
 # test files
 cipher

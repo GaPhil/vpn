@@ -17,7 +17,7 @@ client-private.der"
 
 for FILE in $CERTS
 do
-   [ -f $FILE ] && echo "Found $FILE" ||  { echo "$FILE NOT FOUND" ; exit 1 ;}
+   [ -f $FILE ] && echo "Found $FILE" ||  { echo "$FILE NOT FOUND - RUN 'create_cert.sh'" ; exit 1 ;}
 done
 
 rm $(find ./src/* | grep .class)

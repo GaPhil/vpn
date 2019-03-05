@@ -1,6 +1,6 @@
 #!/bin/bash
 # creates CA, server and client certificates
-# use with $ sh create_certs <bob@smith.com>
+# use with $ sh create_certs.sh <bob@smith.com>
 
 mail=$1
 
